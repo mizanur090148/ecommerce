@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import AdminLayout from "@/Layouts/AdminLayout";
 import { useForm, Link, router } from "@inertiajs/react";
-import { ArrowLeft, Save, Info, FileText, Layers, Search, Check, Plus, Trash2, Palette, Maximize2 } from "lucide-react";
+import { ArrowLeft, Save, Info, FileText, Layers, Search, Check, Plus, Trash2, Palette, Maximize2, Image as ImageIcon, Star, Eye, Upload, ArrowLeft as MoveLeft, ArrowRight as MoveRight } from "lucide-react";
 
 export default function Form({ product, categories = [], brands = [], tags = [], attributes = [] }) {
   const isEditing = !!product;
@@ -15,6 +15,12 @@ export default function Form({ product, categories = [], brands = [], tags = [],
   // New Size Modal/Inline Form state
   const [showAddSize, setShowAddSize] = useState(false);
   const [newSizeName, setNewSizeName] = useState("");
+
+  // Product Images state
+  const [existingImages, setExistingImages] = useState(product?.images || []);
+  const [newImageFiles, setNewImageFiles] = useState([]);
+  const [removedImageIds, setRemovedImageIds] = useState([]);
+  const [dragActive, setDragActive] = useState(false);
 
   const colorAttr = attributes.find((a) => a.code === "color") || { values: [] };
   const sizeAttr = attributes.find((a) => a.code === "size") || { values: [] };
@@ -64,6 +70,109 @@ export default function Form({ product, categories = [], brands = [], tags = [],
     is_trendy: product ? product.is_trendy : false,
   });
 
+  const handleFilesSelect = (files) => {
+    const fileArray = Array.from(files);
+    const totalExisting = existingImages.length;
+    const newItems = fileArray.map((file, idx) => ({
+      id: 'new-' + Date.now() + '-' + idx + '-' + Math.random().toString(36).substr(2, 5),
+      file,
+      previewUrl: URL.createObjectURL(file),
+      is_primary: totalExisting === 0 && newImageFiles.length === 0 && idx === 0,
+      is_hover: false,
+    }));
+    setNewImageFiles((prev) => [...prev, ...newItems]);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFilesSelect(e.dataTransfer.files);
+    }
+  };
+
+  const setPrimaryImage = (type, id) => {
+    if (type === 'existing') {
+      setExistingImages((prev) =>
+        prev.map((img) => ({ ...img, is_primary: img.id === id }))
+      );
+      setNewImageFiles((prev) =>
+        prev.map((img) => ({ ...img, is_primary: false }))
+      );
+    } else {
+      setExistingImages((prev) =>
+        prev.map((img) => ({ ...img, is_primary: false }))
+      );
+      setNewImageFiles((prev) =>
+        prev.map((img) => ({ ...img, is_primary: img.id === id }))
+      );
+    }
+  };
+
+  const setHoverImage = (type, id) => {
+    if (type === 'existing') {
+      setExistingImages((prev) =>
+        prev.map((img) => ({ ...img, is_hover: img.id === id ? !img.is_hover : false }))
+      );
+      setNewImageFiles((prev) =>
+        prev.map((img) => ({ ...img, is_hover: false }))
+      );
+    } else {
+      setExistingImages((prev) =>
+        prev.map((img) => ({ ...img, is_hover: false }))
+      );
+      setNewImageFiles((prev) =>
+        prev.map((img) => ({ ...img, is_hover: img.id === id ? !img.is_hover : false }))
+      );
+    }
+  };
+
+  const removeExistingImage = (id) => {
+    setExistingImages((prev) => prev.filter((img) => img.id !== id));
+    setRemovedImageIds((prev) => [...prev, id]);
+  };
+
+  const removeNewImage = (id) => {
+    setNewImageFiles((prev) => prev.filter((img) => img.id !== id));
+  };
+
+  const moveImage = (type, id, direction) => {
+    if (type === 'existing') {
+      const idx = existingImages.findIndex((img) => img.id === id);
+      if (idx < 0) return;
+      const targetIdx = direction === 'left' ? idx - 1 : idx + 1;
+      if (targetIdx < 0 || targetIdx >= existingImages.length) return;
+      const updated = [...existingImages];
+      const temp = updated[idx];
+      updated[idx] = updated[targetIdx];
+      updated[targetIdx] = temp;
+      setExistingImages(updated);
+    } else {
+      const idx = newImageFiles.findIndex((img) => img.id === id);
+      if (idx < 0) return;
+      const targetIdx = direction === 'left' ? idx - 1 : idx + 1;
+      if (targetIdx < 0 || targetIdx >= newImageFiles.length) return;
+      const updated = [...newImageFiles];
+      const temp = updated[idx];
+      updated[idx] = updated[targetIdx];
+      updated[targetIdx] = temp;
+      setNewImageFiles(updated);
+    }
+  };
+
   const handleCategoryToggle = (id) => {
     const current = [...data.category_ids];
     setData("category_ids", current.includes(id) ? current.filter((cId) => cId !== id) : [...current, id]);
@@ -80,7 +189,7 @@ export default function Form({ product, categories = [], brands = [], tags = [],
     if (nextMap[colorId]) {
       delete nextMap[colorId];
     } else {
-      nextMap[colorId] = []; // Initialize empty size selection for this color
+      nextMap[colorId] = [];
     }
     setData("color_sizes", nextMap);
   };
@@ -131,12 +240,35 @@ export default function Form({ product, categories = [], brands = [], tags = [],
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    const payload = {
+      ...data,
+      existing_images: existingImages.map((img, idx) => ({
+        id: img.id,
+        is_primary: img.is_primary,
+        is_hover: img.is_hover,
+        sort_order: idx,
+      })),
+      new_images: newImageFiles.map((item) => item.file),
+      new_images_meta: newImageFiles.map((item, idx) => ({
+        is_primary: item.is_primary,
+        is_hover: item.is_hover,
+        sort_order: existingImages.length + idx,
+      })),
+      removed_image_ids: removedImageIds,
+    };
+
     if (isEditing) {
-      put(route("admin.products.update", product.id));
+      router.post(route("admin.products.update", product.id), {
+        ...payload,
+        _method: "PUT",
+      });
     } else {
-      post(route("admin.products.store"));
+      router.post(route("admin.products.store"), payload);
     }
   };
+
+  const totalImageCount = existingImages.length + newImageFiles.length;
 
   return (
     <AdminLayout title={isEditing ? `Edit Product: ${product.name}` : "Create New Product"}>
@@ -162,6 +294,22 @@ export default function Form({ product, categories = [], brands = [], tags = [],
             }`}
           >
             <Info className="w-4 h-4 mr-2" /> Basic Info & Pricing
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("media")}
+            className={`px-4 py-2.5 rounded-xl font-semibold text-sm transition flex items-center flex-shrink-0 ${
+              activeTab === "media"
+                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
+                : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
+            }`}
+          >
+            <ImageIcon className="w-4 h-4 mr-2" /> Product Gallery & Media
+            {totalImageCount > 0 && (
+              <span className="ml-2 px-2 py-0.5 text-xs bg-indigo-500 text-white rounded-full font-bold">
+                {totalImageCount}
+              </span>
+            )}
           </button>
           <button
             type="button"
@@ -297,51 +445,83 @@ export default function Form({ product, categories = [], brands = [], tags = [],
               </div>
             </div>
 
-            {/* Pricing & Inventory */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-slate-100 dark:border-slate-700">
-              <div>
-                <label className="block text-sm font-semibold mb-1">Regular Price ($) *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={data.price}
-                  onChange={(e) => setData("price", e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm"
-                  required
-                />
+            {/* Pricing & Advanced Discount Calculation */}
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-700 space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-bold text-slate-900 dark:text-white">Pricing & Discount Calculator</label>
+                {data.price && data.sale_price && parseFloat(data.price) > parseFloat(data.sale_price) && (
+                  <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold text-xs rounded-full">
+                    Discount Applied: Save ${(parseFloat(data.price) - parseFloat(data.sale_price)).toFixed(2)} (
+                    {Math.round(((parseFloat(data.price) - parseFloat(data.sale_price)) / parseFloat(data.price)) * 100)}% OFF)
+                  </span>
+                )}
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold mb-1">Sale Price ($)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={data.sale_price}
-                  onChange={(e) => setData("sale_price", e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm"
-                />
+              {/* Quick Discount Presets */}
+              <div className="flex items-center space-x-2 bg-indigo-50/60 dark:bg-indigo-950/40 p-3 rounded-xl border border-indigo-100 dark:border-indigo-900">
+                <span className="text-xs font-bold text-indigo-900 dark:text-indigo-200">Quick Discount Calculator:</span>
+                {[10, 15, 20, 25, 30, 50, 70].map((pct) => (
+                  <button
+                    key={pct}
+                    type="button"
+                    onClick={() => {
+                      if (data.price) {
+                        const calculated = (parseFloat(data.price) * (1 - pct / 100)).toFixed(2);
+                        setData("sale_price", calculated);
+                      }
+                    }}
+                    className="px-2.5 py-1 rounded-lg text-xs font-bold bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-600 hover:text-white transition shadow-sm"
+                  >
+                    {pct}% OFF
+                  </button>
+                ))}
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold mb-1">Cost Price ($)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={data.cost_price}
-                  onChange={(e) => setData("cost_price", e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm"
-                />
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-1">Regular Price ($) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={data.price}
+                    onChange={(e) => setData("price", e.target.value)}
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm"
+                    required
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-semibold mb-1">Stock Quantity *</label>
-                <input
-                  type="number"
-                  value={data.stock_quantity}
-                  onChange={(e) => setData("stock_quantity", e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm"
-                  required
-                />
+                <div>
+                  <label className="block text-sm font-semibold mb-1">Sale Price ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={data.sale_price}
+                    onChange={(e) => setData("sale_price", e.target.value)}
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold mb-1">Cost Price ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={data.cost_price}
+                    onChange={(e) => setData("cost_price", e.target.value)}
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold mb-1">Stock Quantity *</label>
+                  <input
+                    type="number"
+                    value={data.stock_quantity}
+                    onChange={(e) => setData("stock_quantity", e.target.value)}
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm"
+                    required
+                  />
+                </div>
               </div>
             </div>
 
@@ -377,6 +557,243 @@ export default function Form({ product, categories = [], brands = [], tags = [],
                 <span>Show in Trendy Products</span>
               </label>
             </div>
+          </div>
+        )}
+
+        {/* Tab: Product Gallery & Media */}
+        {activeTab === "media" && (
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-6">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Product Media & Gallery</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Upload product photos. Mark one as <span className="font-bold text-amber-600 dark:text-amber-400">Primary (Main Thumbnail)</span> and one as <span className="font-bold text-indigo-600 dark:text-indigo-400">Hover Image</span> for shop grid preview.
+              </p>
+            </div>
+
+            {/* Drag & Drop Upload Zone */}
+            <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`relative border-2 border-dashed rounded-2xl p-8 text-center transition-all ${
+                dragActive
+                  ? "border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/40"
+                  : "border-slate-300 dark:border-slate-600 hover:border-indigo-400 bg-slate-50/50 dark:bg-slate-900/40"
+              }`}
+            >
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={(e) => e.target.files && handleFilesSelect(e.target.files)}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+              />
+              <div className="flex flex-col items-center justify-center space-y-3">
+                <div className="w-14 h-14 rounded-2xl bg-indigo-100 dark:bg-indigo-900/60 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm">
+                  <Upload className="w-7 h-7" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-800 dark:text-white">
+                    Drag and drop product photos here, or <span className="text-indigo-600 dark:text-indigo-400 underline">browse files</span>
+                  </p>
+                  <p className="text-xs text-slate-400 mt-1">Supports PNG, JPG, JPEG, WEBP, AVIF up to 5MB each</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Image Gallery Grid */}
+            {totalImageCount === 0 ? (
+              <div className="p-8 text-center border rounded-2xl border-slate-100 dark:border-slate-700 bg-slate-50/30 dark:bg-slate-900/20">
+                <ImageIcon className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
+                <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">No images uploaded yet.</p>
+                <p className="text-xs text-slate-400 mt-0.5">Drag files into the box above to add high-resolution product photos.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-slate-800 dark:text-white">
+                    Uploaded Gallery ({totalImageCount} {totalImageCount === 1 ? 'Image' : 'Images'})
+                  </h3>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {/* Existing Images */}
+                  {existingImages.map((img, idx) => (
+                    <div
+                      key={'existing-' + img.id}
+                      className="group relative bg-slate-900 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col"
+                    >
+                      <div className="relative aspect-square bg-slate-100 dark:bg-slate-950 overflow-hidden flex items-center justify-center">
+                        <img
+                          src={img.url}
+                          alt="Product"
+                          className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                        />
+                        {/* Badges */}
+                        <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+                          {img.is_primary && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-extrabold bg-amber-500 text-white shadow-md">
+                              <Star className="w-3 h-3 mr-1 fill-white" /> Primary
+                            </span>
+                          )}
+                          {img.is_hover && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-extrabold bg-indigo-600 text-white shadow-md">
+                              <Eye className="w-3 h-3 mr-1" /> Hover
+                            </span>
+                          )}
+                        </div>
+                        {/* Delete Button */}
+                        <button
+                          type="button"
+                          onClick={() => removeExistingImage(img.id)}
+                          className="absolute top-2 right-2 p-1.5 bg-rose-600 text-white rounded-xl shadow-md opacity-80 hover:opacity-100 transition z-10"
+                          title="Delete image"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      {/* Control toolbar */}
+                      <div className="p-2.5 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700/80 flex items-center justify-between text-xs gap-1">
+                        <div className="flex space-x-1">
+                          <button
+                            type="button"
+                            onClick={() => setPrimaryImage('existing', img.id)}
+                            className={`px-2 py-1 rounded-lg font-bold text-[11px] transition ${
+                              img.is_primary
+                                ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300'
+                                : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-amber-500 hover:text-white'
+                            }`}
+                          >
+                            Primary
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setHoverImage('existing', img.id)}
+                            className={`px-2 py-1 rounded-lg font-bold text-[11px] transition ${
+                              img.is_hover
+                                ? 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300'
+                                : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-indigo-600 hover:text-white'
+                            }`}
+                          >
+                            Hover
+                          </button>
+                        </div>
+                        <div className="flex space-x-1">
+                          <button
+                            type="button"
+                            disabled={idx === 0}
+                            onClick={() => moveImage('existing', img.id, 'left')}
+                            className="p-1 rounded bg-slate-100 dark:bg-slate-700 disabled:opacity-30 hover:bg-slate-200"
+                            title="Move left"
+                          >
+                            <MoveLeft className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={idx === existingImages.length - 1}
+                            onClick={() => moveImage('existing', img.id, 'right')}
+                            className="p-1 rounded bg-slate-100 dark:bg-slate-700 disabled:opacity-30 hover:bg-slate-200"
+                            title="Move right"
+                          >
+                            <MoveRight className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* New Image File Uploads */}
+                  {newImageFiles.map((item, idx) => (
+                    <div
+                      key={item.id}
+                      className="group relative bg-slate-900 rounded-2xl overflow-hidden border-2 border-indigo-400 dark:border-indigo-600 shadow-sm flex flex-col"
+                    >
+                      <div className="relative aspect-square bg-slate-100 dark:bg-slate-950 overflow-hidden flex items-center justify-center">
+                        <img
+                          src={item.previewUrl}
+                          alt="New preview"
+                          className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                        />
+                        <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-600 text-white shadow">
+                          New Upload
+                        </span>
+                        {/* Badges */}
+                        <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+                          {item.is_primary && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-extrabold bg-amber-500 text-white shadow-md">
+                              <Star className="w-3 h-3 mr-1 fill-white" /> Primary
+                            </span>
+                          )}
+                          {item.is_hover && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-extrabold bg-indigo-600 text-white shadow-md">
+                              <Eye className="w-3 h-3 mr-1" /> Hover
+                            </span>
+                          )}
+                        </div>
+                        {/* Delete Button */}
+                        <button
+                          type="button"
+                          onClick={() => removeNewImage(item.id)}
+                          className="absolute top-2 right-2 p-1.5 bg-rose-600 text-white rounded-xl shadow-md opacity-80 hover:opacity-100 transition z-10"
+                          title="Remove image"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      {/* Control toolbar */}
+                      <div className="p-2.5 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700/80 flex items-center justify-between text-xs gap-1">
+                        <div className="flex space-x-1">
+                          <button
+                            type="button"
+                            onClick={() => setPrimaryImage('new', item.id)}
+                            className={`px-2 py-1 rounded-lg font-bold text-[11px] transition ${
+                              item.is_primary
+                                ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300'
+                                : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-amber-500 hover:text-white'
+                            }`}
+                          >
+                            Primary
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setHoverImage('new', item.id)}
+                            className={`px-2 py-1 rounded-lg font-bold text-[11px] transition ${
+                              item.is_hover
+                                ? 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300'
+                                : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-indigo-600 hover:text-white'
+                            }`}
+                          >
+                            Hover
+                          </button>
+                        </div>
+                        <div className="flex space-x-1">
+                          <button
+                            type="button"
+                            disabled={idx === 0}
+                            onClick={() => moveImage('new', item.id, 'left')}
+                            className="p-1 rounded bg-slate-100 dark:bg-slate-700 disabled:opacity-30 hover:bg-slate-200"
+                            title="Move left"
+                          >
+                            <MoveLeft className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={idx === newImageFiles.length - 1}
+                            onClick={() => moveImage('new', item.id, 'right')}
+                            className="p-1 rounded bg-slate-100 dark:bg-slate-700 disabled:opacity-30 hover:bg-slate-200"
+                            title="Move right"
+                          >
+                            <MoveRight className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

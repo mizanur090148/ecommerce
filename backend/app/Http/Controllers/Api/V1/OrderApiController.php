@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Coupon;
 use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -35,5 +36,56 @@ class OrderApiController extends Controller
             'message' => 'Order placed successfully',
             'data' => $order,
         ], 201);
+    }
+
+    public function validateCoupon(Request $request): JsonResponse
+    {
+        $request->validate([
+            'code' => 'required|string',
+            'subtotal' => 'required|numeric|min:0',
+        ]);
+
+        $coupon = Coupon::where('code', strtoupper($request->code))
+            ->where('is_active', true)
+            ->first();
+
+        if (!$coupon) {
+            return response()->json(['status' => 'error', 'message' => 'Invalid or inactive coupon code.'], 404);
+        }
+
+        if ($coupon->expires_at && now()->greaterThan($coupon->expires_at)) {
+            return response()->json(['status' => 'error', 'message' => 'This coupon has expired.'], 422);
+        }
+
+        if ($coupon->usage_limit && $coupon->used_count >= $coupon->usage_limit) {
+            return response()->json(['status' => 'error', 'message' => 'Coupon usage limit reached.'], 422);
+        }
+
+        if ($coupon->min_spend && $request->subtotal < $coupon->min_spend) {
+            return response()->json([
+                'status' => 'error',
+                'message' => "Minimum order amount of $" . number_format($coupon->min_spend, 2) . " required for this coupon.",
+            ], 422);
+        }
+
+        $discountAmount = 0;
+        if ($coupon->type === 'percentage') {
+            $discountAmount = ($request->subtotal * $coupon->value) / 100;
+        } elseif ($coupon->type === 'fixed') {
+            $discountAmount = min($coupon->value, $request->subtotal);
+        } elseif ($coupon->type === 'free_shipping') {
+            $discountAmount = $coupon->value;
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Coupon applied successfully!',
+            'data' => [
+                'code' => $coupon->code,
+                'type' => $coupon->type,
+                'value' => $coupon->value,
+                'discount_amount' => round($discountAmount, 2),
+            ],
+        ]);
     }
 }

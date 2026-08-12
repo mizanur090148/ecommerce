@@ -12,4 +12,5 @@ Route::prefix('v1')->group(function () {
 
     // Orders & Checkout REST APIs
     Route::post('/checkout', [OrderApiController::class, 'store']);
+    Route::post('/coupons/validate', [OrderApiController::class, 'validateCoupon']);
 });

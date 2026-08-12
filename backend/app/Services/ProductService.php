@@ -8,6 +8,7 @@ use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ProductService
 {
@@ -64,20 +65,10 @@ class ProductService
                 $product->tags()->sync($data['tag_ids']);
             }
 
-            if (!empty($data['images'])) {
-                foreach ($data['images'] as $index => $imgPath) {
-                    ProductImage::create([
-                        'product_id' => $product->id,
-                        'image_path' => $imgPath,
-                        'is_primary' => $index === 0,
-                        'sort_order' => $index,
-                    ]);
-                }
-            }
-
+            $this->syncProductImages($product, $data);
             $this->syncVariants($product, $data);
 
-            return $product;
+            return $product->fresh(['brand', 'categories', 'images', 'variants.attributeValues']);
         });
     }
 
@@ -98,10 +89,82 @@ class ProductService
                 $product->tags()->sync($data['tag_ids']);
             }
 
+            $this->syncProductImages($product, $data);
             $this->syncVariants($product, $data);
 
             return $product->fresh(['brand', 'categories', 'images', 'variants.attributeValues']);
         });
+    }
+
+    public function syncProductImages(Product $product, array $data): void
+    {
+        // 1. Delete removed images
+        if (!empty($data['removed_image_ids']) && is_array($data['removed_image_ids'])) {
+            $imagesToDelete = ProductImage::whereIn('id', $data['removed_image_ids'])
+                ->where('product_id', $product->id)
+                ->get();
+
+            foreach ($imagesToDelete as $img) {
+                if ($img->image_path && Storage::disk('public')->exists($img->image_path)) {
+                    Storage::disk('public')->delete($img->image_path);
+                }
+                $img->delete();
+            }
+        }
+
+        // 2. Update existing images metadata (primary, hover, sort_order)
+        if (!empty($data['existing_images']) && is_array($data['existing_images'])) {
+            foreach ($data['existing_images'] as $imgMeta) {
+                if (isset($imgMeta['id'])) {
+                    ProductImage::where('id', $imgMeta['id'])
+                        ->where('product_id', $product->id)
+                        ->update([
+                            'is_primary' => !empty($imgMeta['is_primary']),
+                            'is_hover' => !empty($imgMeta['is_hover']),
+                            'sort_order' => $imgMeta['sort_order'] ?? 0,
+                        ]);
+                }
+            }
+        }
+
+        // 3. Process new image uploads
+        if (!empty($data['new_images']) && is_array($data['new_images'])) {
+            $newMeta = $data['new_images_meta'] ?? [];
+            foreach ($data['new_images'] as $index => $file) {
+                if ($file && $file->isValid()) {
+                    $path = $file->store('products/' . $product->id, 'public');
+                    $meta = $newMeta[$index] ?? [];
+                    ProductImage::create([
+                        'product_id' => $product->id,
+                        'image_path' => $path,
+                        'is_primary' => !empty($meta['is_primary']),
+                        'is_hover' => !empty($meta['is_hover']),
+                        'sort_order' => $meta['sort_order'] ?? ($index + 100),
+                    ]);
+                }
+            }
+        }
+
+        // 4. Ensure at most 1 primary image exists
+        $primaryImages = ProductImage::where('product_id', $product->id)->where('is_primary', true)->get();
+        if ($primaryImages->count() > 1) {
+            // Keep the first one, unset others
+            $keepId = $primaryImages->first()->id;
+            ProductImage::where('product_id', $product->id)->where('id', '!=', $keepId)->update(['is_primary' => false]);
+        } elseif ($primaryImages->count() === 0) {
+            // Fallback: Set the first available image as primary
+            $firstImg = ProductImage::where('product_id', $product->id)->orderBy('sort_order')->first();
+            if ($firstImg) {
+                $firstImg->update(['is_primary' => true]);
+            }
+        }
+
+        // 5. Ensure at most 1 hover image exists
+        $hoverImages = ProductImage::where('product_id', $product->id)->where('is_hover', true)->get();
+        if ($hoverImages->count() > 1) {
+            $keepId = $hoverImages->first()->id;
+            ProductImage::where('product_id', $product->id)->where('id', '!=', $keepId)->update(['is_hover' => false]);
+        }
     }
 
     protected function syncVariants(Product $product, array $data): void

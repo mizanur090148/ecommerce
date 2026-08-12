@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import AdminLayout from "@/Layouts/AdminLayout";
-import { useForm, router } from "@inertiajs/react";
+import { useForm, Link, router } from "@inertiajs/react";
 import { Plus, Trash2, Edit2, X, FolderTree } from "lucide-react";
 
 export default function Index({ categories, parentCategories }) {
@@ -161,6 +161,47 @@ export default function Index({ categories, parentCategories }) {
               </tbody>
             </table>
           </div>
+
+          {/* Server-Side Pagination Bar */}
+          {categories.total > 0 && (
+            <div className="px-6 py-4 bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-xs text-slate-500 dark:text-slate-400">
+                Showing <span className="font-semibold text-slate-900 dark:text-white">{categories.from || 0}</span> to{" "}
+                <span className="font-semibold text-slate-900 dark:text-white">{categories.to || 0}</span> of{" "}
+                <span className="font-semibold text-slate-900 dark:text-white">{categories.total}</span> categories
+              </div>
+
+              {categories.links && categories.links.length > 3 && (
+                <div className="flex items-center space-x-1">
+                  {categories.links.map((link, key) => {
+                    if (link.url === null) {
+                      return (
+                        <span
+                          key={key}
+                          className="px-3 py-1.5 text-xs rounded-lg text-slate-400 dark:text-slate-600 cursor-not-allowed select-none"
+                          dangerouslySetInnerHTML={{ __html: link.label }}
+                        />
+                      );
+                    }
+
+                    return (
+                      <Link
+                        key={key}
+                        href={link.url}
+                        preserveState
+                        className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+                          link.active
+                            ? "bg-indigo-600 text-white shadow-sm"
+                            : "bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-600"
+                        }`}
+                        dangerouslySetInnerHTML={{ __html: link.label }}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </AdminLayout>

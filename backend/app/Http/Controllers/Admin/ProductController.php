@@ -103,6 +103,11 @@ class ProductController extends Controller
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
             'is_trendy' => 'boolean',
+            'new_images' => 'nullable|array',
+            'new_images.*' => 'image|mimes:jpeg,png,jpg,gif,webp,avif|max:5120',
+            'new_images_meta' => 'nullable|array',
+            'existing_images' => 'nullable|array',
+            'removed_image_ids' => 'nullable|array',
         ]);
 
         $this->productService->createProduct($validated);
@@ -149,6 +154,11 @@ class ProductController extends Controller
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
             'is_trendy' => 'boolean',
+            'new_images' => 'nullable|array',
+            'new_images.*' => 'image|mimes:jpeg,png,jpg,gif,webp,avif|max:5120',
+            'new_images_meta' => 'nullable|array',
+            'existing_images' => 'nullable|array',
+            'removed_image_ids' => 'nullable|array',
         ]);
 
         $this->productService->updateProduct($product, $validated);

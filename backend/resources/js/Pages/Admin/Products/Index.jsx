@@ -60,10 +60,14 @@ export default function Index({ products, categories, brands, filters }) {
                 <tr key={product.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
                   <td className="py-3.5 px-4">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center flex-shrink-0 font-bold text-slate-500">
-                        {product.name.charAt(0)}
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 overflow-hidden flex items-center justify-center flex-shrink-0 font-bold text-slate-500 border border-slate-200 dark:border-slate-700">
+                        {product.primary_image?.url ? (
+                          <img src={product.primary_image.url} alt={product.name} className="w-full h-full object-cover" />
+                        ) : (
+                          product.name.charAt(0)
+                        )}
                       </div>
-                      <div className="truncate">
+                      <div className="truncate max-w-xs">
                         <span className="font-semibold text-slate-900 dark:text-white block truncate">
                           {product.name}
                         </span>
@@ -121,6 +125,47 @@ export default function Index({ products, categories, brands, filters }) {
             </tbody>
           </table>
         </div>
+
+        {/* Server-Side Pagination Bar */}
+        {products.total > 0 && (
+          <div className="px-6 py-4 bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-xs text-slate-500 dark:text-slate-400">
+              Showing <span className="font-semibold text-slate-900 dark:text-white">{products.from || 0}</span> to{" "}
+              <span className="font-semibold text-slate-900 dark:text-white">{products.to || 0}</span> of{" "}
+              <span className="font-semibold text-slate-900 dark:text-white">{products.total}</span> products
+            </div>
+
+            {products.links && products.links.length > 3 && (
+              <div className="flex items-center space-x-1">
+                {products.links.map((link, key) => {
+                  if (link.url === null) {
+                    return (
+                      <span
+                        key={key}
+                        className="px-3 py-1.5 text-xs rounded-lg text-slate-400 dark:text-slate-600 cursor-not-allowed select-none"
+                        dangerouslySetInnerHTML={{ __html: link.label }}
+                      />
+                    );
+                  }
+
+                  return (
+                    <Link
+                      key={key}
+                      href={link.url}
+                      preserveState
+                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+                        link.active
+                          ? "bg-indigo-600 text-white shadow-sm"
+                          : "bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-600"
+                      }`}
+                      dangerouslySetInnerHTML={{ __html: link.label }}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </AdminLayout>
   );

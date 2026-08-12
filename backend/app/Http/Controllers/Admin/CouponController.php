@@ -23,7 +23,7 @@ class CouponController extends Controller
     {
         $validated = $request->validate([
             'code' => 'required|string|max:50|unique:coupons,code',
-            'type' => 'required|in:fixed,percentage',
+            'type' => 'required|in:fixed,percentage,free_shipping',
             'value' => 'required|numeric|min:0',
             'min_spend' => 'nullable|numeric|min:0',
             'usage_limit' => 'nullable|integer|min:1',
@@ -31,16 +31,17 @@ class CouponController extends Controller
             'is_active' => 'boolean',
         ]);
 
+        $validated['code'] = strtoupper($validated['code']);
         Coupon::create($validated);
 
-        return redirect()->back()->with('success', 'Coupon created successfully.');
+        return redirect()->back()->with('success', 'Advanced Coupon created successfully.');
     }
 
     public function update(Request $request, Coupon $coupon)
     {
         $validated = $request->validate([
             'code' => 'required|string|max:50|unique:coupons,code,' . $coupon->id,
-            'type' => 'required|in:fixed,percentage',
+            'type' => 'required|in:fixed,percentage,free_shipping',
             'value' => 'required|numeric|min:0',
             'min_spend' => 'nullable|numeric|min:0',
             'usage_limit' => 'nullable|integer|min:1',
@@ -48,6 +49,7 @@ class CouponController extends Controller
             'is_active' => 'boolean',
         ]);
 
+        $validated['code'] = strtoupper($validated['code']);
         $coupon->update($validated);
 
         return redirect()->back()->with('success', 'Coupon updated successfully.');
