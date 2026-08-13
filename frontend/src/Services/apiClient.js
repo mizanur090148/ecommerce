@@ -18,7 +18,7 @@ export const apiClient = {
       });
     }
 
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('customer_auth_token') || localStorage.getItem('auth_token');
     const headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',

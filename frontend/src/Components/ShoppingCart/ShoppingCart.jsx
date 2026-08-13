@@ -8,6 +8,7 @@ import {
   clearCart,
 } from "../../Features/Cart/cartSlice";
 import useCheckout from "../../Hooks/useCheckout";
+import authService from "../../Services/authService";
 
 import { MdOutlineClose } from "react-icons/md";
 import { Link } from "react-router-dom";
@@ -21,11 +22,13 @@ const ShoppingCart = () => {
   const [payments, setPayments] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState("Cash on delivery");
 
+  const currentUser = authService.getCurrentUser();
+
   const [billingForm, setBillingForm] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
+    firstName: currentUser?.name ? currentUser.name.split(" ")[0] : "",
+    lastName: currentUser?.name ? currentUser.name.split(" ").slice(1).join(" ") : "",
+    email: currentUser?.email || "",
+    phone: currentUser?.phone || "",
     address: "",
     city: "",
     postcode: "",
