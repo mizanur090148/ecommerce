@@ -6,6 +6,7 @@ import {
   updateQuantity,
   selectCartTotalAmount,
 } from "../../Features/Cart/cartSlice";
+import useCheckout from "../../Hooks/useCheckout";
 
 import { MdOutlineClose } from "react-icons/md";
 
@@ -19,6 +20,34 @@ const ShoppingCart = () => {
 
   const [activeTab, setActiveTab] = useState("cartTab1");
   const [payments, setPayments] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState("Cash on delivery");
+
+  const [billingForm, setBillingForm] = useState({
+    firstName: "John",
+    lastName: "Doe",
+    email: "john@example.com",
+    phone: "+1234567890",
+    address: "123 Main St",
+    city: "New York",
+    postcode: "10001",
+  });
+
+  const {
+    couponCode,
+    setCouponCode,
+    appliedCoupon,
+    couponLoading,
+    couponError,
+    applyCoupon,
+    submittingOrder,
+    orderError,
+    createdOrder,
+    placeOrder,
+  } = useCheckout();
+
+  const handlePaymentChange = (e) => {
+    setSelectedPayment(e.target.value);
+  };
 
   const handleTabClick = (tab) => {
     if (tab === "cartTab1" || cartItems.length > 0) {
@@ -55,16 +84,6 @@ const ShoppingCart = () => {
   // Random number
 
   const orderNumber = Math.floor(Math.random() * 100000);
-
-  // Radio Button Data
-
-  const [selectedPayment, setSelectedPayment] = useState(
-    "Direct Bank Transfer"
-  );
-
-  const handlePaymentChange = (e) => {
-    setSelectedPayment(e.target.value);
-  };
 
   return (
     <>
@@ -602,14 +621,39 @@ const ShoppingCart = () => {
                       .
                     </div>
                   </div>
+                  {orderError && (
+                    <div style={{ color: "#e53e3e", marginBottom: "15px", fontWeight: "500" }}>
+                      {orderError}
+                    </div>
+                  )}
                   <button
-                    onClick={() => {
-                      handleTabClick("cartTab3");
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                      setPayments(true);
+                    disabled={submittingOrder}
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      try {
+                        const payload = {
+                          customer_email: billingForm.email || "customer@example.com",
+                          customer_phone: billingForm.phone || "1234567890",
+                          billing_address: billingForm,
+                          shipping_address: billingForm,
+                          payment_method: selectedPayment || "Cash on delivery",
+                          coupon_code: appliedCoupon?.code || null,
+                          items: cartItems.map((item) => ({
+                            product_id: item.productID,
+                            quantity: item.quantity,
+                          })),
+                        };
+
+                        await placeOrder(payload);
+                        handleTabClick("cartTab3");
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                        setPayments(true);
+                      } catch (err) {
+                        console.error(err);
+                      }
                     }}
                   >
-                    Place Order
+                    {submittingOrder ? "Processing..." : "Place Order"}
                   </button>
                 </div>
               </div>
