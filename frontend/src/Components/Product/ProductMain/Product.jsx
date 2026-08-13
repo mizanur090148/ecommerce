@@ -86,8 +86,6 @@ const Product = () => {
     }
   };
 
-  const handleWishClick = () => setClicked(!clicked);
-
   const handleAddToCart = () => {
     if (!product) return;
 
