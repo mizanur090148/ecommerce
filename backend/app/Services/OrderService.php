@@ -43,8 +43,20 @@ class OrderService
             $itemsToCreate = [];
 
             foreach ($data['items'] as $itemData) {
-                $product = Product::findOrFail($itemData['product_id']);
-                $itemSubtotal = $product->price * $itemData['quantity'];
+                // Pessimistic Database Row Lock to prevent race conditions during high concurrent traffic
+                $product = Product::where('id', $itemData['product_id'])->lockForUpdate()->firstOrFail();
+
+                if ($product->is_stock_managed) {
+                    if ($product->stock_status === 'out_of_stock' || $product->stock_quantity < 1) {
+                        throw new \InvalidArgumentException("Product '{$product->name}' is out of stock.");
+                    }
+                    if ($itemData['quantity'] > $product->stock_quantity) {
+                        throw new \InvalidArgumentException("Cannot order {$itemData['quantity']} units of '{$product->name}'. Only {$product->stock_quantity} available in stock.");
+                    }
+                }
+
+                $unitPrice = $product->sale_price ?: $product->price;
+                $itemSubtotal = $unitPrice * $itemData['quantity'];
                 $subtotal += $itemSubtotal;
 
                 $itemsToCreate[] = [
@@ -52,7 +64,7 @@ class OrderService
                     'variant_id' => $itemData['variant_id'] ?? null,
                     'product_name' => $product->name,
                     'sku' => $product->sku,
-                    'unit_price' => $product->price,
+                    'unit_price' => $unitPrice,
                     'quantity' => $itemData['quantity'],
                     'subtotal' => $itemSubtotal,
                 ];

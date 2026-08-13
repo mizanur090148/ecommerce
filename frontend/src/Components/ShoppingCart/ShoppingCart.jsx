@@ -5,13 +5,12 @@ import {
   removeFromCart,
   updateQuantity,
   selectCartTotalAmount,
+  clearCart,
 } from "../../Features/Cart/cartSlice";
 import useCheckout from "../../Hooks/useCheckout";
 
 import { MdOutlineClose } from "react-icons/md";
-
 import { Link } from "react-router-dom";
-
 import success from "../../Assets/success.png";
 
 const ShoppingCart = () => {
@@ -23,14 +22,37 @@ const ShoppingCart = () => {
   const [selectedPayment, setSelectedPayment] = useState("Cash on delivery");
 
   const [billingForm, setBillingForm] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    email: "john@example.com",
-    phone: "+1234567890",
-    address: "123 Main St",
-    city: "New York",
-    postcode: "10001",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    postcode: "",
+    notes: "",
   });
+  const [formErrors, setFormErrors] = useState({});
+
+  const handleInputChange = (field, value) => {
+    setBillingForm((prev) => ({ ...prev, [field]: value }));
+    if (formErrors[field]) {
+      setFormErrors((prev) => ({ ...prev, [field]: null }));
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    if (!billingForm.firstName.trim()) errors.firstName = "First name is required.";
+    if (!billingForm.lastName.trim()) errors.lastName = "Last name is required.";
+    if (!billingForm.email.trim()) errors.email = "Email address is required.";
+    else if (!/\S+@\S+\.\S+/.test(billingForm.email)) errors.email = "Valid email is required.";
+    if (!billingForm.phone.trim()) errors.phone = "Phone number is required.";
+    if (!billingForm.address.trim()) errors.address = "Street address is required.";
+    if (!billingForm.city.trim()) errors.city = "Town / City is required.";
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const {
     couponCode,
@@ -39,6 +61,7 @@ const ShoppingCart = () => {
     couponLoading,
     couponError,
     applyCoupon,
+    removeCoupon,
     submittingOrder,
     orderError,
     createdOrder,
@@ -61,7 +84,12 @@ const ShoppingCart = () => {
     }
   };
 
-  const totalPrice = useSelector(selectCartTotalAmount);
+  const rawSubtotal = useSelector(selectCartTotalAmount);
+  const numSubtotal = Number(rawSubtotal) || 0;
+  const numDiscount = Number(appliedCoupon?.discount_amount) || 0;
+  const numShipping = numSubtotal > 0 ? 5 : 0;
+  const numVat = numSubtotal > 0 ? 11 : 0;
+  const numGrandTotal = Math.max(0, numSubtotal - numDiscount + numShipping + numVat);
 
   const scrollToTop = () => {
     window.scrollTo({
@@ -70,18 +98,13 @@ const ShoppingCart = () => {
     });
   };
 
-  // current Date
-
   const currentDate = new Date();
-
   const formatDate = (date) => {
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
   };
-
-  // Random number
 
   const orderNumber = Math.floor(Math.random() * 100000);
 
@@ -99,13 +122,8 @@ const ShoppingCart = () => {
                 setPayments(false);
               }}
             >
-              <div className="shoppingCartTabsNumber">
-                <h3>01</h3>
-                <div className="shoppingCartTabsHeading">
-                  <h3>Shopping Bag</h3>
-                  <p>Manage Your Items List</p>
-                </div>
-              </div>
+              <div className="tabNumber">1</div>
+              <div className="tabText">Shopping Bag</div>
             </button>
             <button
               className={activeTab === "cartTab2" ? "active" : ""}
@@ -115,633 +133,434 @@ const ShoppingCart = () => {
               }}
               disabled={cartItems.length === 0}
             >
-              <div className="shoppingCartTabsNumber">
-                <h3>02</h3>
-                <div className="shoppingCartTabsHeading">
-                  <h3>Shipping and Checkout</h3>
-                  <p>Checkout Your Items List</p>
-                </div>
-              </div>
+              <div className="tabNumber">2</div>
+              <div className="tabText">Shipping and Checkout</div>
             </button>
             <button
               className={activeTab === "cartTab3" ? "active" : ""}
-              onClick={() => {
-                handleTabClick("cartTab3");
-              }}
-              disabled={cartItems.length === 0 || payments === false}
+              onClick={() => handleTabClick("cartTab3")}
+              disabled={!payments}
             >
-              <div className="shoppingCartTabsNumber">
-                <h3>03</h3>
-                <div className="shoppingCartTabsHeading">
-                  <h3>Confirmation</h3>
-                  <p>Review And Submit Your Order</p>
-                </div>
-              </div>
+              <div className="tabNumber">3</div>
+              <div className="tabText">Confirmation</div>
             </button>
           </div>
-          <div className="shoppingCartTabsContent">
-            {/* tab1 */}
-            {activeTab === "cartTab1" && (
-              <div className="shoppingBagSection">
-                <div className="shoppingBagTableSection">
-                  {/* For Desktop Devices */}
-                  <table className="shoppingBagTable">
-                    <thead>
-                      <tr>
-                        <th>Product</th>
-                        <th></th>
-                        <th>Price</th>
-                        <th>Quantity</th>
-                        <th>Subtotal</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {cartItems.length > 0 ? (
-                        cartItems.map((item) => (
+        </div>
+
+        <div className="shoppingCartTabContent">
+          {/* Tab 1: Shopping Bag */}
+          {activeTab === "cartTab1" && (
+            <div className="shoppingBagSection">
+              <div className="shoppingBagTable">
+                <table className="shoppingBagTableMain">
+                  <thead>
+                    <tr>
+                      <th>PRODUCT</th>
+                      <th>PRICE</th>
+                      <th>QUANTITY</th>
+                      <th>SUBTOTAL</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cartItems.length > 0 ? (
+                      cartItems.map((item) => {
+                        const price = Number(item.productPrice) || 0;
+                        const qty = Number(item.quantity) || 1;
+                        return (
                           <tr key={item.productID}>
                             <td data-label="Product">
-                              <div className="shoppingBagTableImg">
-                                <Link to="/product" onClick={scrollToTop}>
-                                  <img src={item.frontImg} alt="" />
+                              <div className="shoppingBagTableProduct">
+                                <Link to={`/product/${item.productID}`} onClick={scrollToTop} className="shoppingBagTableImg">
+                                  <img src={item.frontImg} alt={item.productName} />
                                 </Link>
+                                <div className="shoppingBagTableProductDetail">
+                                  <Link to={`/product/${item.productID}`} onClick={scrollToTop}>
+                                    <h4>{item.productName}</h4>
+                                  </Link>
+                                </div>
                               </div>
                             </td>
-                            <td data-label="">
-                              <div className="shoppingBagTableProductDetail">
-                                <Link to="/product" onClick={scrollToTop}>
-                                  <h4>{item.productName}</h4>
-                                </Link>
-                                <p>{item.productReviews}</p>
-                              </div>
-                            </td>
-                            <td
-                              data-label="Price"
-                              style={{ textAlign: "center" }}
-                            >
-                              ${item.productPrice}
+                            <td data-label="Price">
+                              <p>${price.toFixed(2)}</p>
                             </td>
                             <td data-label="Quantity">
-                              <div className="ShoppingBagTableQuantity">
-                                <button
-                                  onClick={() =>
-                                    handleQuantityChange(
-                                      item.productID,
-                                      item.quantity - 1
-                                    )
-                                  }
-                                >
-                                  -
-                                </button>
+                              <div className="shoppingBagTableQuantity">
+                                <button onClick={() => handleQuantityChange(item.productID, qty - 1)}>-</button>
                                 <input
                                   type="text"
                                   min="1"
                                   max="20"
-                                  value={item.quantity}
-                                  onChange={(e) =>
-                                    handleQuantityChange(
-                                      item.productID,
-                                      parseInt(e.target.value)
-                                    )
-                                  }
+                                  value={qty}
+                                  onChange={(e) => handleQuantityChange(item.productID, parseInt(e.target.value) || 1)}
                                 />
-                                <button
-                                  onClick={() =>
-                                    handleQuantityChange(
-                                      item.productID,
-                                      item.quantity + 1
-                                    )
-                                  }
-                                >
-                                  +
-                                </button>
+                                <button onClick={() => handleQuantityChange(item.productID, qty + 1)}>+</button>
                               </div>
                             </td>
                             <td data-label="Subtotal">
-                              <p
-                                style={{
-                                  textAlign: "center",
-                                  fontWeight: "500",
-                                }}
-                              >
-                                ${item.quantity * item.productPrice}
+                              <p style={{ textAlign: "center", fontWeight: "500" }}>
+                                ${(price * qty).toFixed(2)}
                               </p>
                             </td>
                             <td data-label="">
                               <MdOutlineClose
-                                onClick={() =>
-                                  dispatch(removeFromCart(item.productID))
-                                }
+                                style={{ cursor: "pointer" }}
+                                onClick={() => dispatch(removeFromCart(item.productID))}
                               />
                             </td>
                           </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan="6">
-                            <div className="shoppingCartEmpty">
-                              <span>Your cart is empty!</span>
-                              <Link to="/shop" onClick={scrollToTop}>
-                                <button>Shop Now</button>
-                              </Link>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                    <tfoot>
-                      <th
-                        colSpan="6"
-                        className="shopCartFooter"
-                        style={{
-                          borderBottom: "none",
-                          padding: "20px 0px",
-                        }}
-                      >
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan="5">
+                          <div className="shoppingCartEmpty">
+                            <span>Your cart is empty!</span>
+                            <Link to="/shop" onClick={scrollToTop}>
+                              <button>Shop Now</button>
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colSpan="5" style={{ padding: "20px 0" }}>
                         {cartItems.length > 0 && (
                           <div className="shopCartFooterContainer">
-                            <form>
+                            <form style={{ display: "flex", gap: "10px" }}>
                               <input
                                 type="text"
-                                placeholder="Coupon Code"
-                              ></input>
+                                placeholder="Coupon Code (e.g. WELCOME10)"
+                                value={couponCode}
+                                onChange={(e) => setCouponCode(e.target.value)}
+                              />
                               <button
+                                type="button"
+                                disabled={couponLoading}
                                 onClick={(e) => {
                                   e.preventDefault();
+                                  applyCoupon(couponCode, numSubtotal);
                                 }}
                               >
-                                Apply Coupon
+                                {couponLoading ? "Applying..." : "Apply Coupon"}
                               </button>
                             </form>
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                              }}
-                              className="shopCartFooterbutton"
-                            >
-                              Update Cart
-                            </button>
+                            {couponError && <p style={{ color: "#e53e3e", fontSize: "0.85rem" }}>{couponError}</p>}
+                            {appliedCoupon && (
+                              <p style={{ color: "#07bc0c", fontSize: "0.85rem" }}>
+                                Coupon <b>{appliedCoupon.code}</b> applied! (-${numDiscount.toFixed(2)})
+                                <span onClick={removeCoupon} style={{ marginLeft: "8px", cursor: "pointer", textDecoration: "underline", color: "#e53e3e" }}>Remove</span>
+                              </p>
+                            )}
                           </div>
                         )}
-                      </th>
-                    </tfoot>
-                  </table>
-
-                  {/* For Mobile devices */}
-
-                  <div className="shoppingBagTableMobile">
-                    {cartItems.length > 0 ? (
-                      <>
-                        {cartItems.map((item) => (
-                          <div key={item.productID}>
-                            <div className="shoppingBagTableMobileItems">
-                              <div className="shoppingBagTableMobileItemsImg">
-                                <Link to="/product" onClick={scrollToTop}>
-                                  <img src={item.frontImg} alt="" />
-                                </Link>
-                              </div>
-                              <div className="shoppingBagTableMobileItemsDetail">
-                                <div className="shoppingBagTableMobileItemsDetailMain">
-                                  <Link to="/product" onClick={scrollToTop}>
-                                    <h4>{item.productName}</h4>
-                                  </Link>
-                                  <p>{item.productReviews}</p>
-                                  <div className="shoppingBagTableMobileQuantity">
-                                    <button
-                                      onClick={() =>
-                                        handleQuantityChange(
-                                          item.productID,
-                                          item.quantity - 1
-                                        )
-                                      }
-                                    >
-                                      -
-                                    </button>
-                                    <input
-                                      type="text"
-                                      min="1"
-                                      max="20"
-                                      value={item.quantity}
-                                      onChange={(e) =>
-                                        handleQuantityChange(
-                                          item.productID,
-                                          parseInt(e.target.value)
-                                        )
-                                      }
-                                    />
-                                    <button
-                                      onClick={() =>
-                                        handleQuantityChange(
-                                          item.productID,
-                                          item.quantity + 1
-                                        )
-                                      }
-                                    >
-                                      +
-                                    </button>
-                                  </div>
-                                  <span>${item.productPrice}</span>
-                                </div>
-                                <div className="shoppingBagTableMobileItemsDetailTotal">
-                                  <MdOutlineClose
-                                    size={20}
-                                    onClick={() =>
-                                      dispatch(removeFromCart(item.productID))
-                                    }
-                                  />
-                                  <p>${item.quantity * item.productPrice}</p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                        <div className="shopCartFooter">
-                          <div className="shopCartFooterContainer">
-                            <form>
-                              <input
-                                type="text"
-                                placeholder="Coupon Code"
-                              ></input>
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                }}
-                              >
-                                Apply Coupon
-                              </button>
-                            </form>
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                              }}
-                              className="shopCartFooterbutton"
-                            >
-                              Update Cart
-                            </button>
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="shoppingCartEmpty">
-                        <span>Your cart is empty!</span>
-                        <Link to="/shop" onClick={scrollToTop}>
-                          <button>Shop Now</button>
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="shoppingBagTotal">
-                  <h3>Cart Totals</h3>
-                  <table className="shoppingBagTotalTable">
-                    <tbody>
-                      <tr>
-                        <th>Subtotal</th>
-                        <td>${totalPrice.toFixed(2)}</td>
-                      </tr>
-                      <tr>
-                        <th>Shipping</th>
-                        <td>
-                          <div className="shoppingBagTotalTableCheck">
-                            <p>${(totalPrice === 0 ? 0 : 5).toFixed(2)}</p>
-                            <p>Shipping to Al..</p>
-                            <p
-                              onClick={scrollToTop}
-                              style={{
-                                cursor: "pointer",
-                              }}
-                            >
-                              CHANGE ADDRESS
-                            </p>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <th>VAT</th>
-                        <td>${(totalPrice === 0 ? 0 : 11).toFixed(2)}</td>
-                      </tr>
-                      <tr>
-                        <th>Total</th>
-                        <td>
-                          ${(totalPrice === 0 ? 0 : totalPrice + 16).toFixed(2)}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  <button
-                    onClick={() => {
-                      handleTabClick("cartTab2");
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }}
-                    disabled={cartItems.length === 0}
-                  >
-                    Proceed to Checkout
-                  </button>
-                </div>
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
               </div>
-            )}
 
-            {/* tab2 */}
-            {activeTab === "cartTab2" && (
-              <div className="checkoutSection">
-                <div className="checkoutDetailsSection">
-                  <h4>Billing Details</h4>
-                  <div className="checkoutDetailsForm">
-                    <form>
-                      <div className="checkoutDetailsFormRow">
-                        <input type="text" placeholder="First Name" />
-                        <input type="text" placeholder="Last Name" />
+              <div className="shoppingBagTotal">
+                <h3>Cart Totals</h3>
+                <table className="shoppingBagTotalTable">
+                  <tbody>
+                    <tr>
+                      <th>Subtotal</th>
+                      <td>${numSubtotal.toFixed(2)}</td>
+                    </tr>
+                    {numDiscount > 0 && (
+                      <tr>
+                        <th>Discount ({appliedCoupon?.code})</th>
+                        <td style={{ color: "#07bc0c" }}>-${numDiscount.toFixed(2)}</td>
+                      </tr>
+                    )}
+                    <tr>
+                      <th>Shipping</th>
+                      <td>${numShipping.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                      <th>VAT</th>
+                      <td>${numVat.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                      <th>Total</th>
+                      <td style={{ fontWeight: "bold", fontSize: "1.1rem" }}>${numGrandTotal.toFixed(2)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <button
+                  onClick={() => {
+                    handleTabClick("cartTab2");
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  disabled={cartItems.length === 0}
+                >
+                  Proceed to Checkout
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Tab 2: Checkout Details */}
+          {activeTab === "cartTab2" && (
+            <div className="checkoutSection">
+              <div className="checkoutDetailsSection">
+                <h4>Billing & Shipping Details</h4>
+                <div className="checkoutDetailsForm">
+                  <form onSubmit={(e) => e.preventDefault()}>
+                    <div className="checkoutDetailsFormRow">
+                      <div style={{ flex: 1 }}>
+                        <input
+                          type="text"
+                          placeholder="First Name *"
+                          value={billingForm.firstName}
+                          style={{ borderColor: formErrors.firstName ? "#e53e3e" : "#ccc", width: "100%" }}
+                          onChange={(e) => handleInputChange("firstName", e.target.value)}
+                        />
+                        {formErrors.firstName && <span style={{ color: "#e53e3e", fontSize: "0.75rem", display: "block", marginTop: "2px" }}>{formErrors.firstName}</span>}
                       </div>
+                      <div style={{ flex: 1 }}>
+                        <input
+                          type="text"
+                          placeholder="Last Name *"
+                          value={billingForm.lastName}
+                          style={{ borderColor: formErrors.lastName ? "#e53e3e" : "#ccc", width: "100%" }}
+                          onChange={(e) => handleInputChange("lastName", e.target.value)}
+                        />
+                        {formErrors.lastName && <span style={{ color: "#e53e3e", fontSize: "0.75rem", display: "block", marginTop: "2px" }}>{formErrors.lastName}</span>}
+                      </div>
+                    </div>
+                    <div style={{ marginTop: "12px" }}>
+                      <input
+                        type="email"
+                        placeholder="Your Email *"
+                        value={billingForm.email}
+                        style={{ borderColor: formErrors.email ? "#e53e3e" : "#ccc", width: "100%" }}
+                        onChange={(e) => handleInputChange("email", e.target.value)}
+                      />
+                      {formErrors.email && <span style={{ color: "#e53e3e", fontSize: "0.75rem", display: "block", marginTop: "2px" }}>{formErrors.email}</span>}
+                    </div>
+                    <div style={{ marginTop: "12px" }}>
                       <input
                         type="text"
-                        placeholder="Company Name (optional)"
+                        placeholder="Phone Number *"
+                        value={billingForm.phone}
+                        style={{ borderColor: formErrors.phone ? "#e53e3e" : "#ccc", width: "100%" }}
+                        onChange={(e) => handleInputChange("phone", e.target.value)}
                       />
-                      <select name="country" id="country">
-                        <option value="Country / Region" selected disabled>
-                          Country / Region
-                        </option>
-                        <option value="India">India</option>
-                        <option value="Canada">Canada</option>
-                        <option value="United Kingdom">United Kingdom</option>
-                        <option value="United States">United States</option>
-                        <option value="Turkey">Turkey</option>
-                      </select>
-                      <input type="text" placeholder="Street Address*" />
-                      <input type="text" placeholder="" />
-                      <input type="text" placeholder="Town / City *" />
-                      <input type="text" placeholder="Postcode / ZIP *" />
-                      <input type="text" placeholder="Phone *" />
-                      <input type="mail" placeholder="Your Mail *" />
-                      <div className="checkoutDetailsFormCheck">
-                        <label>
-                          <input type="checkbox" />
-                          <p>Create An Account?</p>
-                        </label>
-                        <label>
-                          <input type="checkbox" />
-                          <p>Ship to a different Address</p>
-                        </label>
-                      </div>
-                      <textarea
-                        cols={30}
-                        rows={8}
-                        placeholder="Order Notes (Optional)"
-                      />
-                    </form>
-                  </div>
-                </div>
-                <div className="checkoutPaymentSection">
-                  <div className="checkoutTotalContainer">
-                    <h3>Your Order</h3>
-                    <div className="checkoutItems">
-                      <table>
-                        <thead>
-                          <tr>
-                            <th>PRODUCTS</th>
-                            <th>SUBTOTALS</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {cartItems.map((items) => (
-                            <tr>
-                              <td>
-                                {items.productName} x {items.quantity}
-                              </td>
-                              <td>${items.productPrice * items.quantity}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                      {formErrors.phone && <span style={{ color: "#e53e3e", fontSize: "0.75rem", display: "block", marginTop: "2px" }}>{formErrors.phone}</span>}
                     </div>
-                    <div className="checkoutTotal">
-                      <table>
-                        <tbody>
-                          <tr>
-                            <th>Subtotal</th>
-                            <td>${totalPrice.toFixed(2)}</td>
-                          </tr>
-                          <tr>
-                            <th>Shipping</th>
-                            <td>$5</td>
-                          </tr>
-                          <tr>
-                            <th>VAT</th>
-                            <td>$11</td>
-                          </tr>
-                          <tr>
-                            <th>Total</th>
-                            <td>
-                              $
-                              {(totalPrice === 0 ? 0 : totalPrice + 16).toFixed(
-                                2
-                              )}
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
+                    <div style={{ marginTop: "12px" }}>
+                      <input
+                        type="text"
+                        placeholder="Street Address *"
+                        value={billingForm.address}
+                        style={{ borderColor: formErrors.address ? "#e53e3e" : "#ccc", width: "100%" }}
+                        onChange={(e) => handleInputChange("address", e.target.value)}
+                      />
+                      {formErrors.address && <span style={{ color: "#e53e3e", fontSize: "0.75rem", display: "block", marginTop: "2px" }}>{formErrors.address}</span>}
                     </div>
-                  </div>
-                  <div className="checkoutPaymentContainer">
-                    <label>
-                      <input
-                        type="radio"
-                        name="payment"
-                        value="Direct Bank Transfer"
-                        defaultChecked
-                        onChange={handlePaymentChange}
-                      />
-                      <div className="checkoutPaymentMethod">
-                        <span>Direct Bank Transfer</span>
-                        <p>
-                          Make your payment directly into our bank account.
-                          Please use your Order ID as the payment reference.Your
-                          order will not be shipped until the funds have cleared
-                          in our account.
-                        </p>
+                    <div className="checkoutDetailsFormRow" style={{ marginTop: "12px" }}>
+                      <div style={{ flex: 1 }}>
+                        <input
+                          type="text"
+                          placeholder="Town / City *"
+                          value={billingForm.city}
+                          style={{ borderColor: formErrors.city ? "#e53e3e" : "#ccc", width: "100%" }}
+                          onChange={(e) => handleInputChange("city", e.target.value)}
+                        />
+                        {formErrors.city && <span style={{ color: "#e53e3e", fontSize: "0.75rem", display: "block", marginTop: "2px" }}>{formErrors.city}</span>}
                       </div>
-                    </label>
-                    <label>
-                      <input
-                        type="radio"
-                        name="payment"
-                        value="Check Payments"
-                        onChange={handlePaymentChange}
-                      />
-                      <div className="checkoutPaymentMethod">
-                        <span>Check Payments</span>
-                        <p>
-                          Phasellus sed volutpat orci. Fusce eget lore mauris
-                          vehicula elementum gravida nec dui. Aenean aliquam
-                          varius ipsum, non ultricies tellus sodales eu. Donec
-                          dignissim viverra nunc, ut aliquet magna posuere eget.
-                        </p>
+                      <div style={{ flex: 1 }}>
+                        <input
+                          type="text"
+                          placeholder="Postcode / ZIP (Optional)"
+                          value={billingForm.postcode}
+                          onChange={(e) => handleInputChange("postcode", e.target.value)}
+                        />
                       </div>
-                    </label>
-                    <label>
-                      <input
-                        type="radio"
-                        name="payment"
-                        value="Cash on delivery"
-                        onChange={handlePaymentChange}
-                      />
-                      <div className="checkoutPaymentMethod">
-                        <span>Cash on delivery</span>
-                        <p>
-                          Phasellus sed volutpat orci. Fusce eget lore mauris
-                          vehicula elementum gravida nec dui. Aenean aliquam
-                          varius ipsum, non ultricies tellus sodales eu. Donec
-                          dignissim viverra nunc, ut aliquet magna posuere eget.
-                        </p>
-                      </div>
-                    </label>
-                    <label>
-                      <input
-                        type="radio"
-                        name="payment"
-                        value="Paypal"
-                        onChange={handlePaymentChange}
-                      />
-                      <div className="checkoutPaymentMethod">
-                        <span>Paypal</span>
-                        <p>
-                          Phasellus sed volutpat orci. Fusce eget lore mauris
-                          vehicula elementum gravida nec dui. Aenean aliquam
-                          varius ipsum, non ultricies tellus sodales eu. Donec
-                          dignissim viverra nunc, ut aliquet magna posuere eget.
-                        </p>
-                      </div>
-                    </label>
-                    <div className="policyText">
-                      Your personal data will be used to process your order,
-                      support your experience throughout this website, and for
-                      other purposes described in our{" "}
-                      <Link to="/terms" onClick={scrollToTop}>
-                        Privacy Policy
-                      </Link>
-                      .
                     </div>
-                  </div>
-                  {orderError && (
-                    <div style={{ color: "#e53e3e", marginBottom: "15px", fontWeight: "500" }}>
-                      {orderError}
-                    </div>
-                  )}
-                  <button
-                    disabled={submittingOrder}
-                    onClick={async (e) => {
-                      e.preventDefault();
-                      try {
-                        const payload = {
-                          customer_email: billingForm.email || "customer@example.com",
-                          customer_phone: billingForm.phone || "1234567890",
-                          billing_address: billingForm,
-                          shipping_address: billingForm,
-                          payment_method: selectedPayment || "Cash on delivery",
-                          coupon_code: appliedCoupon?.code || null,
-                          items: cartItems.map((item) => ({
-                            product_id: item.productID,
-                            quantity: item.quantity,
-                          })),
-                        };
-
-                        await placeOrder(payload);
-                        handleTabClick("cartTab3");
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                        setPayments(true);
-                      } catch (err) {
-                        console.error(err);
-                      }
-                    }}
-                  >
-                    {submittingOrder ? "Processing..." : "Place Order"}
-                  </button>
+                    <textarea
+                      cols={30}
+                      rows={4}
+                      placeholder="Order Notes (Optional)"
+                      style={{ marginTop: "12px" }}
+                      value={billingForm.notes}
+                      onChange={(e) => handleInputChange("notes", e.target.value)}
+                    />
+                  </form>
                 </div>
               </div>
-            )}
 
-            {/* tab3 */}
-            {activeTab === "cartTab3" && (
-              <div className="orderCompleteSection">
-                <div className="orderComplete">
-                  <div className="orderCompleteMessage">
-                    <div className="orderCompleteMessageImg">
-                      <img src={success} alt="" />
-                    </div>
-                    <h3>Your order is completed!</h3>
-                    <p>Thank you. Your order has been received.</p>
-                  </div>
-                  <div className="orderInfo">
-                    <div className="orderInfoItem">
-                      <p>Order Number</p>
-                      <h4>{orderNumber}</h4>
-                    </div>
-                    <div className="orderInfoItem">
-                      <p>Date</p>
-                      <h4>{formatDate(currentDate)}</h4>
-                    </div>
-                    <div className="orderInfoItem">
-                      <p>Total</p>
-                      <h4>${totalPrice.toFixed(2)}</h4>
-                    </div>
-                    <div className="orderInfoItem">
-                      <p>Payment Method</p>
-                      <h4>{selectedPayment}</h4>
-                    </div>
-                  </div>
-                  <div className="orderTotalContainer">
-                    <h3>Order Details</h3>
-                    <div className="orderItems">
-                      <table>
-                        <thead>
-                          <tr>
-                            <th>PRODUCTS</th>
-                            <th>SUBTOTALS</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {cartItems.map((items) => (
-                            <tr>
-                              <td>
-                                {items.productName} x {items.quantity}
-                              </td>
-                              <td>${items.productPrice * items.quantity}</td>
+              <div className="checkoutPaymentSection">
+                <div className="checkoutTotalContainer">
+                  <h3>Your Order Summary</h3>
+                  <div className="checkoutItems">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>PRODUCTS</th>
+                          <th>SUBTOTAL</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {cartItems.map((item) => {
+                          const p = Number(item.productPrice) || 0;
+                          const q = Number(item.quantity) || 1;
+                          return (
+                            <tr key={item.productID}>
+                              <td>{item.productName} × {q}</td>
+                              <td>${(p * q).toFixed(2)}</td>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                    <div className="orderTotal">
-                      <table>
-                        <tbody>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="checkoutTotal">
+                    <table>
+                      <tbody>
+                        <tr>
+                          <th>Subtotal</th>
+                          <td>${numSubtotal.toFixed(2)}</td>
+                        </tr>
+                        {numDiscount > 0 && (
                           <tr>
-                            <th>Subtotal</th>
-                            <td>${totalPrice.toFixed(2)}</td>
+                            <th>Discount</th>
+                            <td style={{ color: "#07bc0c" }}>-${numDiscount.toFixed(2)}</td>
                           </tr>
-                          <tr>
-                            <th>Shipping</th>
-                            <td>$5</td>
-                          </tr>
-                          <tr>
-                            <th>VAT</th>
-                            <td>$11</td>
-                          </tr>
-                          <tr>
-                            <th>Total</th>
-                            <td>
-                              $
-                              {(totalPrice === 0 ? 0 : totalPrice + 16).toFixed(
-                                2
-                              )}
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
+                        )}
+                        <tr>
+                          <th>Shipping</th>
+                          <td>${numShipping.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                          <th>VAT</th>
+                          <td>${numVat.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                          <th>Total</th>
+                          <td style={{ fontWeight: "bold" }}>${numGrandTotal.toFixed(2)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
+
+                <div className="checkoutPaymentContainer">
+                  <label>
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="Cash on delivery"
+                      checked={selectedPayment === "Cash on delivery"}
+                      onChange={handlePaymentChange}
+                    />
+                    <div className="checkoutPaymentMethod">
+                      <span>Cash on Delivery</span>
+                      <p>Pay with cash upon delivery of your items.</p>
+                    </div>
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="Direct Bank Transfer"
+                      checked={selectedPayment === "Direct Bank Transfer"}
+                      onChange={handlePaymentChange}
+                    />
+                    <div className="checkoutPaymentMethod">
+                      <span>Direct Bank Transfer</span>
+                      <p>Transfer directly to our store bank account.</p>
+                    </div>
+                  </label>
+                </div>
+
+                {orderError && (
+                  <div style={{ color: "#e53e3e", marginBottom: "15px", fontWeight: "500" }}>
+                    {orderError}
+                  </div>
+                )}
+
+                <button
+                  disabled={submittingOrder}
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    if (!validateForm()) {
+                      return;
+                    }
+                    try {
+                      const payload = {
+                        customer_email: billingForm.email,
+                        customer_phone: billingForm.phone,
+                        billing_address: billingForm,
+                        shipping_address: billingForm,
+                        payment_method: selectedPayment || "Cash on delivery",
+                        coupon_code: appliedCoupon?.code || null,
+                        order_notes: billingForm.notes || null,
+                        items: cartItems.map((item) => ({
+                          product_id: item.productID,
+                          quantity: item.quantity,
+                        })),
+                      };
+
+                      await placeOrder(payload);
+                      dispatch(clearCart());
+                      handleTabClick("cartTab3");
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                      setPayments(true);
+                    } catch (err) {
+                      console.error(err);
+                    }
+                  }}
+                >
+                  {submittingOrder ? "Processing Order..." : "Place Order"}
+                </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* Tab 3: Order Complete */}
+          {activeTab === "cartTab3" && (
+            <div className="orderCompleteSection">
+              <div className="orderComplete">
+                <div className="orderCompleteMessage">
+                  <div className="orderCompleteMessageImg">
+                    <img src={success} alt="Success" />
+                  </div>
+                  <h3>Your Order is Completed!</h3>
+                  <p>Thank you! Your order has been placed successfully in our system.</p>
+                </div>
+                <div className="orderInfo">
+                  <div className="orderInfoItem">
+                    <p>Order Number</p>
+                    <h4>{createdOrder?.order_number || `#ORD-${orderNumber}`}</h4>
+                  </div>
+                  <div className="orderInfoItem">
+                    <p>Date</p>
+                    <h4>{formatDate(currentDate)}</h4>
+                  </div>
+                  <div className="orderInfoItem">
+                    <p>Grand Total</p>
+                    <h4>${(createdOrder?.grand_total ? Number(createdOrder.grand_total) : numGrandTotal).toFixed(2)}</h4>
+                  </div>
+                  <div className="orderInfoItem">
+                    <p>Payment Method</p>
+                    <h4>{createdOrder?.payment_method || selectedPayment}</h4>
+                  </div>
+                </div>
+                <div style={{ textAlign: "center", marginTop: "30px" }}>
+                  <Link to="/shop" onClick={scrollToTop}>
+                    <button style={{ padding: "12px 30px", background: "#000", color: "#fff", border: "none", cursor: "pointer", borderRadius: "4px" }}>
+                      Continue Shopping
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>

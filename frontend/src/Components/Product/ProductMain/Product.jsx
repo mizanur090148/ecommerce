@@ -36,13 +36,28 @@ const Product = () => {
   const dispatch = useDispatch();
   const cartItems = useSelector((state) => state.cart.items);
 
-  const increment = () => setQuantity((q) => q + 1);
+  const maxStock = product?.is_stock_managed ? product.stock_quantity : 999;
+
+  const increment = () => {
+    setQuantity((q) => {
+      if (q >= maxStock) {
+        toast.error(`Only ${maxStock} units available in stock.`, { id: "stock-limit" });
+        return maxStock;
+      }
+      return q + 1;
+    });
+  };
   const decrement = () => setQuantity((q) => (q > 1 ? q - 1 : 1));
 
   const handleInputChange = (event) => {
     const value = parseInt(event.target.value);
     if (!isNaN(value) && value > 0) {
-      setQuantity(value);
+      if (value > maxStock) {
+        toast.error(`Only ${maxStock} units available in stock.`, { id: "stock-limit" });
+        setQuantity(maxStock);
+      } else {
+        setQuantity(value);
+      }
     }
   };
 
@@ -156,6 +171,19 @@ const Product = () => {
               </h3>
             </div>
 
+            {/* Stock Availability Badge */}
+            <div className="productStockBadge" style={{ margin: "12px 0" }}>
+              {product.stock_status === "out_of_stock" || (product.is_stock_managed && product.stock_quantity <= 0) ? (
+                <span style={{ background: "#fed7d7", color: "#9b2c2c", padding: "5px 12px", borderRadius: "4px", fontSize: "0.85rem", fontWeight: "bold" }}>
+                  ✕ Sold Out
+                </span>
+              ) : (
+                <span style={{ background: "#c6f6d5", color: "#22543d", padding: "5px 12px", borderRadius: "4px", fontSize: "0.85rem", fontWeight: "bold" }}>
+                  ✓ In Stock {product.is_stock_managed ? `(${product.stock_quantity} available)` : ""}
+                </span>
+              )}
+            </div>
+
             <div className="productDescription">
               <p>{product.short_description || product.description}</p>
             </div>
@@ -220,7 +248,13 @@ const Product = () => {
                 <button onClick={increment}>+</button>
               </div>
               <div className="productCartBtn">
-                <button onClick={handleAddToCart}>Add to Cart</button>
+                {product.stock_status === "out_of_stock" || (product.is_stock_managed && product.stock_quantity <= 0) ? (
+                  <button disabled style={{ background: "#a0aec0", cursor: "not-allowed" }}>
+                    Sold Out
+                  </button>
+                ) : (
+                  <button onClick={handleAddToCart}>Add to Cart</button>
+                )}
               </div>
             </div>
 

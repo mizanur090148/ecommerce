@@ -18,24 +18,35 @@ class OrderApiController extends Controller
     {
         $validated = $request->validate([
             'customer_email' => 'required|email',
-            'customer_phone' => 'nullable|string',
+            'customer_phone' => 'required|string',
+            'billing_address' => 'required|array',
+            'billing_address.firstName' => 'required|string',
+            'billing_address.lastName' => 'required|string',
+            'billing_address.address' => 'required|string',
+            'billing_address.city' => 'required|string',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
-            'billing_address' => 'required|array',
             'shipping_address' => 'nullable|array',
             'payment_method' => 'required|string',
             'coupon_code' => 'nullable|string',
             'order_notes' => 'nullable|string',
         ]);
 
-        $order = $this->orderService->createOrder($validated);
+        try {
+            $order = $this->orderService->createOrder($validated);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Order placed successfully',
-            'data' => $order,
-        ], 201);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Order placed successfully',
+                'data' => $order,
+            ], 201);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 422);
+        }
     }
 
     public function validateCoupon(Request $request): JsonResponse
