@@ -42,9 +42,11 @@ class ProductApiController extends Controller
 
         if ($request->filled('sort')) {
             match ($request->sort) {
+                'latest' => $query->latest(),
+                'best_seller' => $query->orderBy('reviews_count', 'desc'),
+                'featured' => $query->where('is_featured', true),
                 'price_low_high' => $query->orderBy('price', 'asc'),
                 'price_high_low' => $query->orderBy('price', 'desc'),
-                'best_seller' => $query->orderBy('reviews_count', 'desc'),
                 default => $query->latest(),
             };
         } else {
@@ -74,14 +76,26 @@ class ProductApiController extends Controller
 
     public function filters(): JsonResponse
     {
-        $categories = Category::where('is_active', true)->pluck('name');
-        $brands = Brand::where('is_active', true)->withCount('products')->get(['name', 'products_count']);
+        $categories = Category::where('is_active', true)
+            ->withCount('products')
+            ->orderBy('name', 'asc')
+            ->get(['id', 'name', 'slug', 'products_count']);
+
+        $brands = Brand::where('is_active', true)
+            ->withCount('products')
+            ->orderBy('name', 'asc')
+            ->get(['id', 'name', 'slug', 'products_count']);
+
+        $minPrice = (float) (Product::where('is_active', true)->min('price') ?? 0);
+        $maxPrice = (float) (Product::where('is_active', true)->max('price') ?? 1000);
 
         return response()->json([
             'status' => 'success',
             'data' => [
                 'categories' => $categories,
                 'brands' => $brands,
+                'min_price' => floor($minPrice),
+                'max_price' => ceil($maxPrice > 0 ? $maxPrice : 1000),
                 'colors' => ['#0B2472', '#D6BB4F', '#282828', '#B0D6E8', '#9C7539', '#D29B47', '#E5AE95', '#D76B67', '#BABABA', '#BFDCC4'],
                 'sizes' => ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
             ],

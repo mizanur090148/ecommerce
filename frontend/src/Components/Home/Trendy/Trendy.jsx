@@ -21,7 +21,7 @@ const Trendy = () => {
     if (tab === "tab1") updateFilters({ sort: "" });
     else if (tab === "tab2") updateFilters({ sort: "latest" });
     else if (tab === "tab3") updateFilters({ sort: "best_seller" });
-    else if (tab === "tab4") updateFilters({ sort: "price_high_low" });
+    else if (tab === "tab4") updateFilters({ sort: "featured" });
   };
 
   const scrollToTop = () => {

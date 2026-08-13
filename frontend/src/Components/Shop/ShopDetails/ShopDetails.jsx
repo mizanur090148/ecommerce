@@ -21,7 +21,7 @@ const ShopDetails = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Centralized Reusable React Hook
-  const { products, pagination, loading, error, updateFilters, changePage } = useProducts({
+  const { products, pagination, filters, loading, error, updateFilters, changePage } = useProducts({
     per_page: 12,
   });
 
@@ -86,7 +86,7 @@ const ShopDetails = () => {
       <div className="shopDetails">
         <div className="shopDetailMain">
           <div className="shopDetails__left">
-            <Filter onCategorySelect={(cat) => updateFilters({ category: cat })} />
+            <Filter filters={filters} onFilterChange={updateFilters} />
           </div>
           <div className="shopDetails__right">
             <div className="shopDetailsSorting">
@@ -268,7 +268,7 @@ const ShopDetails = () => {
           <IoClose onClick={closeDrawer} className="closeButton" size={26} />
         </div>
         <div className="drawerContent">
-          <Filter onCategorySelect={(cat) => updateFilters({ category: cat })} />
+          <Filter filters={filters} onFilterChange={updateFilters} />
         </div>
       </div>
     </>
