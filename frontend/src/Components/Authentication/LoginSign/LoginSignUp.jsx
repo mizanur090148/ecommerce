@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./LoginSignUp.css";
 import { Link, useNavigate } from "react-router-dom";
 import authService from "../../../Services/authService";
+import CustomerDashboard from "../CustomerDashboard/CustomerDashboard";
 
 const LoginSignUp = () => {
   const navigate = useNavigate();
@@ -27,8 +28,12 @@ const LoginSignUp = () => {
   const [regSuccess, setRegSuccess] = useState("");
 
   useEffect(() => {
-    setCurrentUser(authService.getCurrentUser());
-  }, []);
+    const user = authService.getCurrentUser();
+    setCurrentUser(user);
+    if (user && window.location.pathname === "/login") {
+      navigate("/account", { replace: true });
+    }
+  }, [navigate]);
 
   const handleTab = (tab) => {
     setActiveTab(tab);
@@ -78,7 +83,7 @@ const LoginSignUp = () => {
     try {
       const res = await authService.login(loginData);
       setCurrentUser(res.user);
-      navigate("/shop");
+      navigate("/account");
     } catch (err) {
       setLoginError(err.message || "Failed to log in. Please check your credentials.");
     } finally {
@@ -96,11 +101,9 @@ const LoginSignUp = () => {
     setRegLoading(true);
     try {
       const res = await authService.register(regData);
-      setRegSuccess("Account registered successfully! Redirecting to shop...");
+      setRegSuccess("Account registered successfully!");
       setCurrentUser(res.user);
-      setTimeout(() => {
-        navigate("/shop");
-      }, 1500);
+      navigate("/account");
     } catch (err) {
       if (err.errors && err.errors.email) {
         setRegApiError(err.errors.email[0]);
@@ -112,33 +115,12 @@ const LoginSignUp = () => {
     }
   };
 
-  const handleLogout = async () => {
-    await authService.logout();
-    setCurrentUser(null);
-  };
-
   return (
     <>
       <div className="loginSignUpSection">
-        <div className="loginSignUpContainer">
+        <div className="loginSignUpContainer" style={{ width: "100%" }}>
           {currentUser ? (
-            <div className="loginSignUpTabsContent" style={{ textAlign: "center", padding: "40px 0" }}>
-              <h3 style={{ fontSize: "1.8rem", marginBottom: "10px" }}>Welcome Back, {currentUser.name}! 👋</h3>
-              <p style={{ color: "#666", marginBottom: "25px" }}>Logged in as: {currentUser.email}</p>
-              <div style={{ display: "flex", gap: "15px", justifyContent: "center" }}>
-                <Link to="/shop">
-                  <button style={{ padding: "12px 25px", background: "#000", color: "#fff", border: "none", cursor: "pointer", borderRadius: "4px" }}>
-                    Continue Shopping
-                  </button>
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  style={{ padding: "12px 25px", background: "#e53e3e", color: "#fff", border: "none", cursor: "pointer", borderRadius: "4px" }}
-                >
-                  Log Out
-                </button>
-              </div>
-            </div>
+            <CustomerDashboard />
           ) : (
             <>
               <div className="loginSignUpTabs">

@@ -79,7 +79,7 @@ const Navbar = () => {
         </div>
         <div className="iconContainer">
           <FiSearch size={22} onClick={scrollToTop} />
-          <Link to="/loginSignUp" onClick={scrollToTop}>
+          <Link to="/login" onClick={scrollToTop}>
             <FaRegUser size={22} />
           </Link>
           <Link to="/cart" onClick={scrollToTop}>
@@ -168,7 +168,7 @@ const Navbar = () => {
 
           <div className="mobile-menuFooter">
             <div className="mobile-menuFooterLogin">
-              <Link to="/loginSignUp" onClick={toggleMobileMenu}>
+              <Link to="/login" onClick={toggleMobileMenu}>
                 <FaRegUser />
                 <p>My Account</p>
               </Link>

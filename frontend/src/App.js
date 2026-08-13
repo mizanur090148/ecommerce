@@ -36,7 +36,11 @@ const App = () => {
           <Route path="/blog" element={<Blog />} />
           <Route path="/product" element={<ProductDetails />} />
           <Route path="/product/:slug" element={<ProductDetails />} />
+          <Route path="/login" element={<Authentication />} />
+          <Route path="/register" element={<Authentication />} />
+          <Route path="/account" element={<Authentication />} />
           <Route path="/loginSignUp" element={<Authentication />} />
+          <Route path="/login-signup" element={<Authentication />} />
           <Route path="/resetPassword" element={<ResetPass />} />
           <Route path="/BlogDetails" element={<BlogDetails />} />
           <Route path="/terms" element={<TermsConditions />} />
