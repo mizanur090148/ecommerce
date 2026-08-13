@@ -2,7 +2,7 @@ import apiClient from './apiClient';
 
 /**
  * Order & Checkout Service
- * Centralized API calls for checkout processing and coupon validation.
+ * Centralized API calls for checkout processing, SSLCommerz payment, and coupon validation.
  */
 export const orderService = {
   /**
@@ -11,6 +11,22 @@ export const orderService = {
    */
   async submitCheckout(orderData) {
     return apiClient.post('/checkout', orderData);
+  },
+
+  /**
+   * Initiate SSLCommerz Online Payment (bKash, Nagad, Rocket, Cards)
+   * @param {Object} orderData
+   */
+  async initiateSSLCommerzPayment(orderData) {
+    return apiClient.post('/payment/sslcommerz/initiate', orderData);
+  },
+
+  /**
+   * Fetch order details by order number for confirmation receipts.
+   * @param {string} orderNumber
+   */
+  async getOrderByNumber(orderNumber) {
+    return apiClient.get(`/orders/by-number/${orderNumber}`);
   },
 
   /**

@@ -9,18 +9,45 @@ import {
 } from "../../Features/Cart/cartSlice";
 import useCheckout from "../../Hooks/useCheckout";
 import authService from "../../Services/authService";
+import orderService from "../../Services/orderService";
 
 import { MdOutlineClose } from "react-icons/md";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import success from "../../Assets/success.png";
 
 const ShoppingCart = () => {
+  const location = useLocation();
   const cartItems = useSelector((state) => state.cart.items);
   const dispatch = useDispatch();
 
   const [activeTab, setActiveTab] = useState("cartTab1");
   const [payments, setPayments] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState("Cash on delivery");
+  const [sslOrderNum, setSslOrderNum] = useState("");
+  const [sslError, setSslError] = useState("");
+  const [sslLoading, setSslLoading] = useState(false);
+  const [fetchedOrder, setFetchedOrder] = useState(null);
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const status = params.get("status");
+    const orderNum = params.get("order");
+
+    if (status === "success") {
+      dispatch(clearCart());
+      setActiveTab("cartTab3");
+      setPayments(true);
+      if (orderNum) {
+        setSslOrderNum(orderNum);
+        orderService.getOrderByNumber(orderNum).then((res) => {
+          if (res?.status === "success" && res.data) {
+            setFetchedOrder(res.data);
+          }
+        }).catch((err) => console.error(err));
+      }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [location.search, dispatch]);
 
   const currentUser = authService.getCurrentUser();
 
@@ -90,8 +117,8 @@ const ShoppingCart = () => {
   const rawSubtotal = useSelector(selectCartTotalAmount);
   const numSubtotal = Number(rawSubtotal) || 0;
   const numDiscount = Number(appliedCoupon?.discount_amount) || 0;
-  const numShipping = numSubtotal > 0 ? 5 : 0;
-  const numVat = numSubtotal > 0 ? 11 : 0;
+  const numShipping = 0;
+  const numVat = 0;
   const numGrandTotal = Math.max(0, numSubtotal - numDiscount + numShipping + numVat);
 
   const scrollToTop = () => {
@@ -185,7 +212,7 @@ const ShoppingCart = () => {
                               </div>
                             </td>
                             <td data-label="Price">
-                              <p>${price.toFixed(2)}</p>
+                              <p>৳{price.toFixed(2)}</p>
                             </td>
                             <td data-label="Quantity">
                               <div className="shoppingBagTableQuantity">
@@ -202,7 +229,7 @@ const ShoppingCart = () => {
                             </td>
                             <td data-label="Subtotal">
                               <p style={{ textAlign: "center", fontWeight: "500" }}>
-                                ${(price * qty).toFixed(2)}
+                                ৳{(price * qty).toFixed(2)}
                               </p>
                             </td>
                             <td data-label="">
@@ -253,7 +280,7 @@ const ShoppingCart = () => {
                             {couponError && <p style={{ color: "#e53e3e", fontSize: "0.85rem" }}>{couponError}</p>}
                             {appliedCoupon && (
                               <p style={{ color: "#07bc0c", fontSize: "0.85rem" }}>
-                                Coupon <b>{appliedCoupon.code}</b> applied! (-${numDiscount.toFixed(2)})
+                                Coupon <b>{appliedCoupon.code}</b> applied! (-৳{numDiscount.toFixed(2)})
                                 <span onClick={removeCoupon} style={{ marginLeft: "8px", cursor: "pointer", textDecoration: "underline", color: "#e53e3e" }}>Remove</span>
                               </p>
                             )}
@@ -271,25 +298,25 @@ const ShoppingCart = () => {
                   <tbody>
                     <tr>
                       <th>Subtotal</th>
-                      <td>${numSubtotal.toFixed(2)}</td>
+                      <td>৳{numSubtotal.toFixed(2)}</td>
                     </tr>
                     {numDiscount > 0 && (
                       <tr>
                         <th>Discount ({appliedCoupon?.code})</th>
-                        <td style={{ color: "#07bc0c" }}>-${numDiscount.toFixed(2)}</td>
+                        <td style={{ color: "#07bc0c" }}>-৳{numDiscount.toFixed(2)}</td>
                       </tr>
                     )}
                     <tr>
                       <th>Shipping</th>
-                      <td>${numShipping.toFixed(2)}</td>
+                      <td>৳{numShipping.toFixed(2)}</td>
                     </tr>
                     <tr>
                       <th>VAT</th>
-                      <td>${numVat.toFixed(2)}</td>
+                      <td>৳{numVat.toFixed(2)}</td>
                     </tr>
                     <tr>
                       <th>Total</th>
-                      <td style={{ fontWeight: "bold", fontSize: "1.1rem" }}>${numGrandTotal.toFixed(2)}</td>
+                      <td style={{ fontWeight: "bold", fontSize: "1.1rem" }}>৳{numGrandTotal.toFixed(2)}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -415,7 +442,7 @@ const ShoppingCart = () => {
                           return (
                             <tr key={item.productID}>
                               <td>{item.productName} × {q}</td>
-                              <td>${(p * q).toFixed(2)}</td>
+                              <td>৳{(p * q).toFixed(2)}</td>
                             </tr>
                           );
                         })}
@@ -427,25 +454,25 @@ const ShoppingCart = () => {
                       <tbody>
                         <tr>
                           <th>Subtotal</th>
-                          <td>${numSubtotal.toFixed(2)}</td>
+                          <td>৳{numSubtotal.toFixed(2)}</td>
                         </tr>
                         {numDiscount > 0 && (
                           <tr>
                             <th>Discount</th>
-                            <td style={{ color: "#07bc0c" }}>-${numDiscount.toFixed(2)}</td>
+                            <td style={{ color: "#07bc0c" }}>-৳{numDiscount.toFixed(2)}</td>
                           </tr>
                         )}
                         <tr>
                           <th>Shipping</th>
-                          <td>${numShipping.toFixed(2)}</td>
+                          <td>৳{numShipping.toFixed(2)}</td>
                         </tr>
                         <tr>
                           <th>VAT</th>
-                          <td>${numVat.toFixed(2)}</td>
+                          <td>৳{numVat.toFixed(2)}</td>
                         </tr>
                         <tr>
                           <th>Total</th>
-                          <td style={{ fontWeight: "bold" }}>${numGrandTotal.toFixed(2)}</td>
+                          <td style={{ fontWeight: "bold" }}>৳{numGrandTotal.toFixed(2)}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -453,6 +480,19 @@ const ShoppingCart = () => {
                 </div>
 
                 <div className="checkoutPaymentContainer">
+                  <label>
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="SSLCommerz (bKash / Nagad / Cards)"
+                      checked={selectedPayment === "SSLCommerz (bKash / Nagad / Cards)"}
+                      onChange={handlePaymentChange}
+                    />
+                    <div className="checkoutPaymentMethod">
+                      <span>SSLCommerz (bKash, Nagad, Rocket, Cards)</span>
+                      <p>Pay securely via bKash, Nagad, Rocket, Visa/Mastercard, or Internet Banking.</p>
+                    </div>
+                  </label>
                   <label>
                     <input
                       type="radio"
@@ -481,16 +521,17 @@ const ShoppingCart = () => {
                   </label>
                 </div>
 
-                {orderError && (
+                {(orderError || sslError) && (
                   <div style={{ color: "#e53e3e", marginBottom: "15px", fontWeight: "500" }}>
-                    {orderError}
+                    {orderError || sslError}
                   </div>
                 )}
 
                 <button
-                  disabled={submittingOrder}
+                  disabled={submittingOrder || sslLoading}
                   onClick={async (e) => {
                     e.preventDefault();
+                    setSslError("");
                     if (!validateForm()) {
                       return;
                     }
@@ -509,17 +550,35 @@ const ShoppingCart = () => {
                         })),
                       };
 
-                      await placeOrder(payload);
-                      dispatch(clearCart());
-                      handleTabClick("cartTab3");
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                      setPayments(true);
+                      if (selectedPayment === "SSLCommerz (bKash / Nagad / Cards)") {
+                        setSslLoading(true);
+                        try {
+                          const res = await orderService.initiateSSLCommerzPayment(payload);
+                          if (res.status === "success" && res.gateway_url) {
+                            dispatch(clearCart());
+                            window.location.href = res.gateway_url;
+                            return;
+                          } else {
+                            setSslError(res.message || "Failed to initiate SSLCommerz gateway.");
+                          }
+                        } catch (err) {
+                          setSslError(err.message || "Could not connect to SSLCommerz payment gateway.");
+                        } finally {
+                          setSslLoading(false);
+                        }
+                      } else {
+                        await placeOrder(payload);
+                        dispatch(clearCart());
+                        handleTabClick("cartTab3");
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                        setPayments(true);
+                      }
                     } catch (err) {
                       console.error(err);
                     }
                   }}
                 >
-                  {submittingOrder ? "Processing Order..." : "Place Order"}
+                  {sslLoading ? "Redirecting to SSLCommerz..." : submittingOrder ? "Processing Order..." : "Place Order"}
                 </button>
               </div>
             </div>
@@ -539,19 +598,19 @@ const ShoppingCart = () => {
                 <div className="orderInfo">
                   <div className="orderInfoItem">
                     <p>Order Number</p>
-                    <h4>{createdOrder?.order_number || `#ORD-${orderNumber}`}</h4>
+                    <h4>{fetchedOrder?.order_number || sslOrderNum || createdOrder?.order_number || `#ORD-${orderNumber}`}</h4>
                   </div>
                   <div className="orderInfoItem">
                     <p>Date</p>
-                    <h4>{formatDate(currentDate)}</h4>
+                    <h4>{fetchedOrder?.created_at ? formatDate(new Date(fetchedOrder.created_at)) : formatDate(currentDate)}</h4>
                   </div>
                   <div className="orderInfoItem">
                     <p>Grand Total</p>
-                    <h4>${(createdOrder?.grand_total ? Number(createdOrder.grand_total) : numGrandTotal).toFixed(2)}</h4>
+                    <h4>৳{Number(fetchedOrder?.grand_total || createdOrder?.grand_total || numGrandTotal).toFixed(2)}</h4>
                   </div>
                   <div className="orderInfoItem">
                     <p>Payment Method</p>
-                    <h4>{createdOrder?.payment_method || selectedPayment}</h4>
+                    <h4>{fetchedOrder?.payment_method || createdOrder?.payment_method || selectedPayment}</h4>
                   </div>
                 </div>
                 <div style={{ textAlign: "center", marginTop: "30px" }}>

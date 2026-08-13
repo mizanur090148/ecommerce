@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\AuthApiController;
 use App\Http\Controllers\Api\V1\CustomerApiController;
 use App\Http\Controllers\Api\V1\OrderApiController;
+use App\Http\Controllers\Api\V1\PaymentApiController;
 use App\Http\Controllers\Api\V1\ProductApiController;
 use Illuminate\Support\Facades\Route;
 
@@ -30,5 +31,12 @@ Route::prefix('v1')->group(function () {
 
     // Orders & Checkout REST APIs
     Route::post('/checkout', [OrderApiController::class, 'store']);
+    Route::get('/orders/by-number/{orderNumber}', [OrderApiController::class, 'showByNumber']);
     Route::post('/coupons/validate', [OrderApiController::class, 'validateCoupon']);
+
+    // SSLCommerz Payment Gateway APIs (bKash, Nagad, Rocket, Cards)
+    Route::post('/payment/sslcommerz/initiate', [PaymentApiController::class, 'initiateSSLCommerz']);
+    Route::post('/payment/sslcommerz/success', [PaymentApiController::class, 'successSSLCommerz']);
+    Route::post('/payment/sslcommerz/fail', [PaymentApiController::class, 'failSSLCommerz']);
+    Route::post('/payment/sslcommerz/cancel', [PaymentApiController::class, 'cancelSSLCommerz']);
 });

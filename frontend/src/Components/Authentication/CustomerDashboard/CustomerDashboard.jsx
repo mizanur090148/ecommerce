@@ -259,7 +259,7 @@ const CustomerDashboard = () => {
                               </span>
                             </td>
                             <td style={{ fontWeight: "600" }}>
-                              ${Number(ord.grand_total || 0).toFixed(2)}
+                              ৳{Number(ord.grand_total || 0).toFixed(2)}
                             </td>
                             <td>
                               <button
@@ -295,7 +295,7 @@ const CustomerDashboard = () => {
                             <tr key={item.id} style={{ borderBottom: "1px solid #eee" }}>
                               <td style={{ padding: "8px" }}>{item.product_name}</td>
                               <td style={{ padding: "8px", textAlign: "center" }}>{item.quantity}</td>
-                              <td style={{ padding: "8px", textAlign: "right" }}>${Number(item.subtotal).toFixed(2)}</td>
+                              <td style={{ padding: "8px", textAlign: "right" }}>৳{Number(item.subtotal).toFixed(2)}</td>
                             </tr>
                           ))}
                         </tbody>

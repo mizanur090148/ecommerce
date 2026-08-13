@@ -134,10 +134,10 @@ const LimitedEdition = () => {
                             <h5>{product.name}</h5>
                           </Link>
                           <p style={{ fontWeight: "bold", marginTop: "4px" }}>
-                            ${product.sale_price || product.price}
+                            ৳{product.sale_price || product.price}
                             {product.sale_price && (
                               <span style={{ textDecoration: "line-through", color: "#aaa", marginLeft: "6px", fontSize: "0.85em", fontWeight: "normal" }}>
-                                ${product.price}
+                                ৳{product.price}
                               </span>
                             )}
                           </p>

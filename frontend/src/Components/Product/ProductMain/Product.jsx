@@ -162,10 +162,10 @@ const Product = () => {
 
             <div className="productPrice">
               <h3>
-                ${activeVariant?.price || product.sale_price || product.price}
+                ৳{activeVariant?.price || product.sale_price || product.price}
                 {product.sale_price && (
                   <span style={{ textDecoration: "line-through", color: "#aaa", marginLeft: "10px", fontSize: "0.7em" }}>
-                    ${product.price}
+                    ৳{product.price}
                   </span>
                 )}
               </h3>

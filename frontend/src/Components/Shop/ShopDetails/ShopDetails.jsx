@@ -178,10 +178,10 @@ const ShopDetails = () => {
                             </Link>
 
                             <p>
-                              ${product.sale_price || product.price}
+                              ৳{product.sale_price || product.price}
                               {product.sale_price && (
                                 <span style={{ textDecoration: "line-through", color: "#aaa", marginLeft: "6px", fontSize: "0.85em" }}>
-                                  ${product.price}
+                                  ৳{product.price}
                                 </span>
                               )}
                             </p>

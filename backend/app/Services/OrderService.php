@@ -89,8 +89,8 @@ class OrderService
                 }
             }
 
-            $shippingTotal = $data['shipping_total'] ?? 5.00;
-            $taxTotal = $data['tax_total'] ?? 11.00;
+            $shippingTotal = $data['shipping_total'] ?? 0.00;
+            $taxTotal = $data['tax_total'] ?? 0.00;
             $grandTotal = max(0, $subtotal - $discountTotal + $shippingTotal + $taxTotal);
 
             $order = Order::create([
