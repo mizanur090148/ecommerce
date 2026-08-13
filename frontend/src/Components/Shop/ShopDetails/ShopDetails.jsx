@@ -14,10 +14,15 @@ import { FaAngleRight, FaAngleLeft } from "react-icons/fa6";
 import { FaCartPlus } from "react-icons/fa";
 import toast from "react-hot-toast";
 
+import { toggleWishList, selectWishListItems } from "../../../Features/Wishlist/wishListSlice";
+import wishlistService from "../../../Services/wishlistService";
+import authService from "../../../Services/authService";
+import { FaHeart } from "react-icons/fa";
+
 const ShopDetails = () => {
   const dispatch = useDispatch();
+  const wishlistItems = useSelector(selectWishListItems);
 
-  const [wishList, setWishList] = useState({});
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Centralized Reusable React Hook
@@ -25,11 +30,26 @@ const ShopDetails = () => {
     per_page: 12,
   });
 
-  const handleWishlistClick = (productID) => {
-    setWishList((prevWishlist) => ({
-      ...prevWishlist,
-      [productID]: !prevWishlist[productID],
-    }));
+  const handleWishlistToggle = async (product) => {
+    dispatch(toggleWishList(product));
+    const isWishlisted = wishlistItems.some((item) => item.id === product.id);
+
+    if (isWishlisted) {
+      toast.success("Removed from Wishlist", { duration: 1500 });
+    } else {
+      toast.success("Added to Wishlist!", {
+        duration: 1500,
+        style: { backgroundColor: "#07bc0c", color: "white" },
+      });
+    }
+
+    if (authService.getCurrentUser()) {
+      try {
+        await wishlistService.toggleWishlist(product.id);
+      } catch (e) {
+        console.error("Wishlist sync error", e);
+      }
+    }
   };
 
   const scrollToTop = () => {
@@ -164,13 +184,17 @@ const ShopDetails = () => {
                         <div className="sdProductInfo">
                           <div className="sdProductCategoryWishlist">
                             <p>{categoryName}</p>
-                            <FiHeart
-                              onClick={() => handleWishlistClick(product.id)}
-                              style={{
-                                color: wishList[product.id] ? "red" : "#767676",
-                                cursor: "pointer",
-                              }}
-                            />
+                            {wishlistItems.some((item) => item.id === product.id) ? (
+                              <FaHeart
+                                onClick={() => handleWishlistToggle(product)}
+                                style={{ color: "red", cursor: "pointer" }}
+                              />
+                            ) : (
+                              <FiHeart
+                                onClick={() => handleWishlistToggle(product)}
+                                style={{ color: "#767676", cursor: "pointer" }}
+                              />
+                            )}
                           </div>
                           <div className="sdProductNameInfo">
                             <Link to={`/product/${product.slug}`} onClick={scrollToTop}>

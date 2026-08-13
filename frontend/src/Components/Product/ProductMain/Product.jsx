@@ -4,11 +4,14 @@ import Zoom from "@mui/material/Zoom";
 
 import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "../../../Features/Cart/cartSlice";
+import { toggleWishList, selectWishListItems } from "../../../Features/Wishlist/wishListSlice";
+import wishlistService from "../../../Services/wishlistService";
+import authService from "../../../Services/authService";
 import { useParams, Link } from "react-router-dom";
 import useProductDetails from "../../../Hooks/useProductDetails";
 
 import { GoChevronLeft, GoChevronRight } from "react-icons/go";
-import { FaStar } from "react-icons/fa";
+import { FaStar, FaHeart } from "react-icons/fa";
 import { FiHeart } from "react-icons/fi";
 import { PiShareNetworkLight } from "react-icons/pi";
 import toast from "react-hot-toast";
@@ -31,10 +34,32 @@ const Product = () => {
   } = useProductDetails(slug || "cropped-faux-leather-jacket-1");
 
   const [quantity, setQuantity] = useState(1);
-  const [clicked, setClicked] = useState(false);
 
   const dispatch = useDispatch();
   const cartItems = useSelector((state) => state.cart.items);
+  const wishlistItems = useSelector(selectWishListItems);
+  const isWishlisted = product ? wishlistItems.some((item) => item.id === product.id) : false;
+
+  const handleWishClick = async () => {
+    if (!product) return;
+    dispatch(toggleWishList(product));
+    if (isWishlisted) {
+      toast.success("Removed from Wishlist", { duration: 1500 });
+    } else {
+      toast.success("Added to Wishlist!", {
+        duration: 1500,
+        style: { backgroundColor: "#07bc0c", color: "white" },
+      });
+    }
+
+    if (authService.getCurrentUser()) {
+      try {
+        await wishlistService.toggleWishlist(product.id);
+      } catch (e) {
+        console.error("Wishlist sync error", e);
+      }
+    }
+  };
 
   const maxStock = product?.is_stock_managed ? product.stock_quantity : 999;
 
@@ -260,8 +285,8 @@ const Product = () => {
 
             <div className="productWishList">
               <button onClick={handleWishClick}>
-                <FiHeart color={clicked ? "red" : "#767676"} />
-                <p>{clicked ? "Added to Wishlist" : "Add to Wishlist"}</p>
+                {isWishlisted ? <FaHeart color="red" /> : <FiHeart color="#767676" />}
+                <p>{isWishlisted ? "Added to Wishlist" : "Add to Wishlist"}</p>
               </button>
             </div>
 

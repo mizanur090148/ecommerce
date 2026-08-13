@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\CustomerApiController;
 use App\Http\Controllers\Api\V1\OrderApiController;
 use App\Http\Controllers\Api\V1\PaymentApiController;
 use App\Http\Controllers\Api\V1\ProductApiController;
+use App\Http\Controllers\Api\V1\WishlistApiController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -22,6 +23,11 @@ Route::prefix('v1')->group(function () {
         Route::put('/customer/profile', [CustomerApiController::class, 'updateProfile']);
         Route::put('/customer/password', [CustomerApiController::class, 'updatePassword']);
         Route::post('/customer/addresses', [CustomerApiController::class, 'saveAddress']);
+
+        // Customer Wishlist APIs
+        Route::get('/wishlist', [WishlistApiController::class, 'index']);
+        Route::post('/wishlist/toggle', [WishlistApiController::class, 'toggle']);
+        Route::post('/wishlist/sync', [WishlistApiController::class, 'sync']);
     });
 
     // Public Catalog REST APIs

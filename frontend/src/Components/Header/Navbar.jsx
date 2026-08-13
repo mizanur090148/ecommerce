@@ -22,6 +22,7 @@ import Badge from "@mui/material/Badge";
 
 const Navbar = () => {
   const cart = useSelector((state) => state.cart);
+  const wishlistItems = useSelector((state) => state.wishlist?.items || []);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -94,7 +95,16 @@ const Navbar = () => {
               <RiShoppingBagLine size={22} />
             </Badge>
           </Link>
-          <FiHeart size={22} onClick={scrollToTop} />
+          <Badge
+            badgeContent={wishlistItems.length === 0 ? "0" : wishlistItems.length}
+            color="secondary"
+            anchorOrigin={{
+              vertical: "bottom",
+              horizontal: "right",
+            }}
+          >
+            <FiHeart size={22} style={{ cursor: "pointer", color: wishlistItems.length > 0 ? "#e53e3e" : "inherit" }} onClick={scrollToTop} />
+          </Badge>
           {/* <RiMenu2Line size={22} /> */}
         </div>
       </nav>

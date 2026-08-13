@@ -8,10 +8,15 @@ import { FiHeart } from "react-icons/fi";
 import { FaStar, FaCartPlus } from "react-icons/fa";
 import toast from "react-hot-toast";
 
+import { toggleWishList, selectWishListItems } from "../../../Features/Wishlist/wishListSlice";
+import wishlistService from "../../../Services/wishlistService";
+import authService from "../../../Services/authService";
+import { FaHeart } from "react-icons/fa";
+
 const Trendy = () => {
   const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState("tab1");
-  const [wishList, setWishList] = useState({});
+  const wishlistItems = useSelector(selectWishListItems);
 
   // Use centralized custom hook
   const { products, loading, error, updateFilters } = useProducts({ per_page: 8 });
@@ -31,11 +36,26 @@ const Trendy = () => {
     });
   };
 
-  const handleWishlistClick = (productID) => {
-    setWishList((prevWishlist) => ({
-      ...prevWishlist,
-      [productID]: !prevWishlist[productID],
-    }));
+  const handleWishlistToggle = async (product) => {
+    dispatch(toggleWishList(product));
+    const isWishlisted = wishlistItems.some((item) => item.id === product.id);
+
+    if (isWishlisted) {
+      toast.success("Removed from Wishlist", { duration: 1500 });
+    } else {
+      toast.success("Added to Wishlist!", {
+        duration: 1500,
+        style: { backgroundColor: "#07bc0c", color: "white" },
+      });
+    }
+
+    if (authService.getCurrentUser()) {
+      try {
+        await wishlistService.toggleWishlist(product.id);
+      } catch (e) {
+        console.error("Wishlist sync error", e);
+      }
+    }
   };
 
   const cartItems = useSelector((state) => state.cart.items);
@@ -142,13 +162,17 @@ const Trendy = () => {
                       <div className="trendyProductInfo">
                         <div className="trendyProductCategoryWishlist">
                           <p>{categoryName}</p>
-                          <FiHeart
-                            onClick={() => handleWishlistClick(product.id)}
-                            style={{
-                              color: wishList[product.id] ? "red" : "#767676",
-                              cursor: "pointer",
-                            }}
-                          />
+                          {wishlistItems.some((item) => item.id === product.id) ? (
+                            <FaHeart
+                              onClick={() => handleWishlistToggle(product)}
+                              style={{ color: "red", cursor: "pointer" }}
+                            />
+                          ) : (
+                            <FiHeart
+                              onClick={() => handleWishlistToggle(product)}
+                              style={{ color: "#767676", cursor: "pointer" }}
+                            />
+                          )}
                         </div>
                         <div className="trendyProductNameInfo">
                           <Link to={`/product/${product.slug}`} onClick={scrollToTop}>
