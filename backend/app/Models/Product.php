@@ -84,4 +84,9 @@ class Product extends Model
     {
         return $this->hasMany(Review::class);
     }
+
+    public function priceLogs()
+    {
+        return $this->hasMany(ProductPriceLog::class)->latest();
+    }
 }
