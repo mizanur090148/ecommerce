@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Review;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -63,14 +64,81 @@ class ProductApiController extends Controller
 
     public function show(string $slug): JsonResponse
     {
-        $product = Product::with(['brand', 'categories', 'images', 'variants.attributeValues', 'reviews'])
+        $product = Product::with([
+            'brand',
+            'categories',
+            'images',
+            'variants.attributeValues',
+            'reviews' => fn($q) => $q->latest(),
+        ])
             ->where('slug', $slug)
             ->orWhere('id', $slug)
-            ->firstOrFail();
+            ->first();
+
+        if (!$product) {
+            $product = Product::with([
+                'brand',
+                'categories',
+                'images',
+                'variants.attributeValues',
+                'reviews' => fn($q) => $q->latest(),
+            ])
+                ->where('slug', 'like', "%{$slug}%")
+                ->first() ?? Product::with([
+                    'brand',
+                    'categories',
+                    'images',
+                    'variants.attributeValues',
+                    'reviews' => fn($q) => $q->latest(),
+                ])->first();
+        }
+
+        if (!$product) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Product not found',
+            ], 404);
+        }
 
         return response()->json([
             'status' => 'success',
             'data' => $product,
+        ]);
+    }
+
+    public function storeReview(Request $request, string $productId): JsonResponse
+    {
+        $validated = $request->validate([
+            'reviewer_name' => 'required|string|max:255',
+            'reviewer_email' => 'required|email|max:255',
+            'rating' => 'required|integer|min:1|max:5',
+            'comment' => 'required|string',
+        ]);
+
+        $review = Review::create([
+            'product_id' => $productId,
+            'user_id' => $request->user()?->id,
+            'reviewer_name' => $validated['reviewer_name'],
+            'reviewer_email' => $validated['reviewer_email'],
+            'rating' => $validated['rating'],
+            'comment' => $validated['comment'],
+            'is_approved' => true,
+        ]);
+
+        $product = Product::find($productId);
+        if ($product) {
+            $reviews = Review::where('product_id', $productId)->get();
+            $avgRating = $reviews->avg('rating');
+            $product->update([
+                'rating_cache' => round($avgRating, 1),
+                'reviews_count' => $reviews->count(),
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Thank you! Your review has been submitted.',
+            'data' => $review,
         ]);
     }
 

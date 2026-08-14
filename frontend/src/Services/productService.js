@@ -27,6 +27,15 @@ export const productService = {
   async getFilterOptions() {
     return apiClient.get('/products/filters');
   },
+
+  /**
+   * Submit a new customer review for a product.
+   * @param {string|number} productId
+   * @param {Object} reviewData
+   */
+  async submitReview(productId, reviewData) {
+    return apiClient.post(`/products/${productId}/reviews`, reviewData);
+  },
 };
 
 export default productService;

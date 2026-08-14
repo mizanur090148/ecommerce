@@ -34,6 +34,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/products', [ProductApiController::class, 'index']);
     Route::get('/products/filters', [ProductApiController::class, 'filters']);
     Route::get('/products/{slug}', [ProductApiController::class, 'show']);
+    Route::post('/products/{id}/reviews', [ProductApiController::class, 'storeReview']);
 
     // Orders & Checkout REST APIs
     Route::post('/checkout', [OrderApiController::class, 'store']);

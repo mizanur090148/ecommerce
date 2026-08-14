@@ -1,18 +1,68 @@
 import React, { useState } from "react";
 import "./AdditionalInfo.css";
 
-import user1 from "../../../Assets/Users/user1.jpeg";
-import user2 from "../../../Assets/Users/user2.jpeg";
-
 import { FaStar } from "react-icons/fa";
 import Rating from "@mui/material/Rating";
+import authService from "../../../Services/authService";
+import productService from "../../../Services/productService";
+import toast from "react-hot-toast";
 
-const AdditionalInfo = () => {
+const AdditionalInfo = ({ product, onReviewSubmitted }) => {
   const [activeTab, setActiveTab] = useState("aiTab1");
+  const currentUser = authService.getCurrentUser();
+
+  const [ratingVal, setRatingVal] = useState(5);
+  const [comment, setComment] = useState("");
+  const [reviewerName, setReviewerName] = useState(currentUser?.name || "");
+  const [reviewerEmail, setReviewerEmail] = useState(currentUser?.email || "");
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState("");
 
   const handleTabClick = (tab) => {
     setActiveTab(tab);
   };
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    setFormError("");
+
+    if (!product?.id) {
+      setFormError("Product not found.");
+      return;
+    }
+
+    if (!reviewerName.trim() || !reviewerEmail.trim() || !comment.trim()) {
+      setFormError("Please fill in all required fields.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const payload = {
+        reviewer_name: reviewerName,
+        reviewer_email: reviewerEmail,
+        rating: ratingVal,
+        comment: comment,
+      };
+
+      const res = await productService.submitReview(product.id, payload);
+      if (res?.status === "success") {
+        toast.success("Review submitted successfully!", {
+          duration: 2500,
+          style: { backgroundColor: "#07bc0c", color: "white" },
+        });
+        setComment("");
+        if (onReviewSubmitted) onReviewSubmitted();
+      }
+    } catch (err) {
+      setFormError(err.message || "Failed to submit review. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const reviewsList = product?.reviews || [];
+  const reviewsCount = reviewsList.length;
 
   return (
     <>
@@ -36,211 +86,182 @@ const AdditionalInfo = () => {
                 onClick={() => handleTabClick("aiTab3")}
                 className={activeTab === "aiTab3" ? "aiActive" : ""}
               >
-                Reviews (2)
+                Reviews ({reviewsCount})
               </p>
             </div>
           </div>
-          <div className="productAdditionalInfoContent">
-            {/* Tab1 */}
 
+          <div className="productAdditionalInfoContent">
+            {/* Tab 1: Description */}
             {activeTab === "aiTab1" && (
               <div className="aiTabDescription">
                 <div className="descriptionPara">
-                  <h3>Sed do eiusmod tempor incididunt ut labore</h3>
-                  <p>
-                    Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-                    sed do eiusmod tempor incididunt ut labore et dolore magna
-                    aliqua. Ut enim ad minim veniam, quis nostrud exercitation
-                    ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                    Duis aute irure dolor in reprehenderit in voluptate velit
-                    esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
-                    occaecat cupidatat non proident, sunt in culpa qui officia
-                    deserunt mollit anim id est laborum. Sed ut perspiciatis
-                    unde omnis iste natus error sit voluptatem accusantium
-                    doloremque laudantium, totam rem aperiam, eaque ipsa quae ab
-                    illo inventore veritatis et quasi architecto beatae vitae
-                    dicta sunt explicabo.
+                  <h3>{product?.name || "Product Overview"}</h3>
+                  <p style={{ lineHeight: "1.7", color: "#555" }}>
+                    {product?.description || product?.short_description || "No detailed description available for this product."}
                   </p>
                 </div>
-                <div className="descriptionParaGrid">
-                  <div className="descriptionPara">
-                    <h3>Why choose product?</h3>
-                    <p>
-                      <ul>
-                        <li>Creat by cotton fibric with soft and smooth</li>
-                        <li>
-                          Simple, Configurable (e.g. size, color, etc.), bundled
-                        </li>
-                        <li>Downloadable/Digital Products, Virtual Products</li>
-                      </ul>
-                    </p>
+
+                {product?.key_features && (
+                  <div className="descriptionPara" style={{ marginTop: "20px" }}>
+                    <h3>Key Features</h3>
+                    <p style={{ lineHeight: "1.7", color: "#555" }}>{product.key_features}</p>
                   </div>
-                  <div className="descriptionPara">
-                    <h3>Sample Number List</h3>
-                    <p>
-                      <ol>
-                        <li>Creat by cotton fibric with soft and smooth</li>
-                        <li>
-                          Simple, Configurable (e.g. size, color, etc.), bundled
-                        </li>
-                        <li>Downloadable/Digital Products, Virtual Products</li>
-                      </ol>
-                    </p>
+                )}
+
+                {product?.materials_care && (
+                  <div className="descriptionPara" style={{ marginTop: "20px" }}>
+                    <h3>Materials & Care</h3>
+                    <p style={{ marginTop: "5px", color: "#555" }}>{product.materials_care}</p>
                   </div>
-                </div>
-                <div className="descriptionPara">
-                  <h3>Lining</h3>
-                  <p style={{ marginTop: "-10px" }}>
-                    100% Polyester, Main: 100% Polyester.
-                  </p>
-                </div>
+                )}
               </div>
             )}
 
-            {/* Tab2 */}
-
+            {/* Tab 2: Additional Information */}
             {activeTab === "aiTab2" && (
               <div className="aiTabAdditionalInfo">
                 <div className="additionalInfoContainer">
+                  <h6>Brand</h6>
+                  <p>{product?.brand?.name || "Generic"}</p>
+                </div>
+                <div className="additionalInfoContainer">
+                  <h6>Category</h6>
+                  <p>{product?.categories?.map((c) => c.name).join(", ") || "General"}</p>
+                </div>
+                <div className="additionalInfoContainer">
+                  <h6>SKU</h6>
+                  <p>{product?.sku || "N/A"}</p>
+                </div>
+                <div className="additionalInfoContainer">
                   <h6>Weight</h6>
-                  <p> 1.25 kg</p>
+                  <p>{product?.weight ? `${product.weight} kg` : "Standard"}</p>
                 </div>
                 <div className="additionalInfoContainer">
                   <h6>Dimensions</h6>
-                  <p> 90 x 60 x 90 cm</p>
+                  <p>{product?.dimensions || "Standard"}</p>
                 </div>
-                <div className="additionalInfoContainer">
-                  <h6>Size</h6>
-                  <p> XS, S, M, L, XL</p>
-                </div>
-                <div className="additionalInfoContainer">
-                  <h6>Color</h6>
-                  <p> Black, Orange, White</p>
-                </div>
-                <div className="additionalInfoContainer">
-                  <h6>Storage</h6>
-                  <p> Relaxed fit shirt-style dress with a rugged</p>
-                </div>
+                {product?.storage_spec && (
+                  <div className="additionalInfoContainer">
+                    <h6>Storage / Spec</h6>
+                    <p>{product.storage_spec}</p>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Tab3 */}
-
+            {/* Tab 3: Reviews */}
             {activeTab === "aiTab3" && (
               <div className="aiTabReview">
                 <div className="aiTabReviewContainer">
-                  <h3>Reviews</h3>
+                  <h3>Customer Reviews ({reviewsCount})</h3>
+
                   <div className="userReviews">
-                    <div
-                      className="userReview"
-                      style={{ borderBottom: "1px solid #e4e4e4" }}
-                    >
-                      <div className="userReviewImg">
-                        <img src={user1} alt="" />
-                      </div>
-                      <div className="userReviewContent">
-                        <div className="userReviewTopContent">
-                          <div className="userNameRating">
-                            <h6>Janice Miller</h6>
-                            <div className="userRating">
-                              <FaStar color="#FEC78A" size={10} />
-                              <FaStar color="#FEC78A" size={10} />
-                              <FaStar color="#FEC78A" size={10} />
-                              <FaStar color="#FEC78A" size={10} />
-                              <FaStar color="#FEC78A" size={10} />
-                            </div>
-                          </div>
-                          <div className="userDate">
-                            <p>April 06, 2023</p>
-                          </div>
-                        </div>
+                    {reviewsList.length > 0 ? (
+                      reviewsList.map((rev) => (
                         <div
-                          className="userReviewBottomContent"
-                          style={{ marginBottom: "30px" }}
+                          key={rev.id}
+                          className="userReview"
+                          style={{ borderBottom: "1px solid #e4e4e4", paddingBottom: "20px", marginBottom: "20px" }}
                         >
-                          <p>
-                            Nam libero tempore, cum soluta nobis est eligendi
-                            optio cumque nihil impedit quo minus id quod maxime
-                            placeat facere possimus, omnis voluptas assumenda
-                            est…
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="userReview">
-                      <div className="userReviewImg">
-                        <img src={user2} alt="" />
-                      </div>
-                      <div className="userReviewContent">
-                        <div className="userReviewTopContent">
-                          <div className="userNameRating">
-                            <h6>Benjam Porter</h6>
-                            <div className="userRating">
-                              <FaStar color="#FEC78A" size={10} />
-                              <FaStar color="#FEC78A" size={10} />
-                              <FaStar color="#FEC78A" size={10} />
-                              <FaStar color="#FEC78A" size={10} />
-                              <FaStar color="#FEC78A" size={10} />
+                          <div
+                            className="userReviewImg"
+                            style={{
+                              width: "48px",
+                              height: "48px",
+                              borderRadius: "50%",
+                              background: "#222",
+                              color: "#fff",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontWeight: "bold",
+                              fontSize: "1.1rem",
+                            }}
+                          >
+                            {(rev.reviewer_name || "A").charAt(0).toUpperCase()}
+                          </div>
+                          <div className="userReviewContent" style={{ flex: 1 }}>
+                            <div className="userReviewTopContent">
+                              <div className="userNameRating">
+                                <h6>{rev.reviewer_name}</h6>
+                                <div className="userRating" style={{ display: "flex", gap: "2px" }}>
+                                  {[...Array(5)].map((_, i) => (
+                                    <FaStar
+                                      key={i}
+                                      color={i < rev.rating ? "#FEC78A" : "#e4e4e4"}
+                                      size={12}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                              <div className="userDate">
+                                <p>{new Date(rev.created_at).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })}</p>
+                              </div>
+                            </div>
+                            <div className="userReviewBottomContent" style={{ marginTop: "8px" }}>
+                              <p>{rev.comment}</p>
                             </div>
                           </div>
-                          <div className="userDate">
-                            <p>April 12, 2023</p>
-                          </div>
                         </div>
-                        <div className="userReviewBottomContent">
-                          <p>
-                            Nam libero tempore, cum soluta nobis est eligendi
-                            optio cumque nihil impedit quo minus id quod maxime
-                            placeat facere possimus, omnis voluptas assumenda
-                            est…
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+                      ))
+                    ) : (
+                      <p style={{ color: "#777", marginBottom: "30px" }}>No reviews yet for this product. Be the first to review!</p>
+                    )}
                   </div>
+
+                  {/* Add New Review Form */}
                   <div className="userNewReview">
                     <div className="userNewReviewMessage">
-                      <h5>
-                        Be the first to review “Lightweight Puffer Jacket With a
-                        Hood”
-                      </h5>
-                      <p>
-                        Your email address will not be published. Required
-                        fields are marked *
-                      </p>
+                      <h5>Add a Review for "{product?.name}"</h5>
+                      <p>Your email address will not be published. Required fields are marked *</p>
                     </div>
-                    <div className="userNewReviewRating">
-                      <label>Your rating *</label>
-                      <Rating name="simple-controlled" size="small" />
+
+                    <div className="userNewReviewRating" style={{ display: "flex", alignItems: "center", gap: "12px", margin: "15px 0" }}>
+                      <label style={{ fontWeight: "600" }}>Your Rating *</label>
+                      <Rating
+                        name="product-rating"
+                        value={ratingVal}
+                        size="medium"
+                        onChange={(e, val) => setRatingVal(val || 5)}
+                      />
                     </div>
+
+                    {formError && (
+                      <div style={{ color: "#e53e3e", marginBottom: "15px", fontWeight: "500" }}>
+                        {formError}
+                      </div>
+                    )}
+
                     <div className="userNewReviewForm">
-                      <form>
+                      <form onSubmit={handleReviewSubmit}>
                         <textarea
                           cols={30}
-                          rows={8}
-                          placeholder="Your Review"
+                          rows={5}
+                          placeholder="Your Review *"
+                          value={comment}
+                          onChange={(e) => setComment(e.target.value)}
+                          required
                         />
                         <input
                           type="text"
                           placeholder="Name *"
+                          value={reviewerName}
+                          onChange={(e) => setReviewerName(e.target.value)}
                           required
                           className="userNewReviewFormInput"
                         />
                         <input
                           type="email"
                           placeholder="Email address *"
+                          value={reviewerEmail}
+                          onChange={(e) => setReviewerEmail(e.target.value)}
                           required
                           className="userNewReviewFormInput"
                         />
-                        <div className="userNewReviewFormCheck">
-                          <label>
-                            <input type="checkbox" placeholder="Subject" />
-                            Save my name, email, and website in this browser for
-                            the next time I comment.
-                          </label>
-                        </div>
-
-                        <button type="submit">Submit</button>
+                        <button type="submit" disabled={submitting}>
+                          {submitting ? "Submitting..." : "Submit Review"}
+                        </button>
                       </form>
                     </div>
                   </div>
