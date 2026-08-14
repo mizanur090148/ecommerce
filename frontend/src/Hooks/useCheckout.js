@@ -1,19 +1,33 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import orderService from '../Services/orderService';
+import {
+  selectAppliedCoupon,
+  setAppliedCoupon as setReduxAppliedCoupon,
+  removeAppliedCoupon as removeReduxAppliedCoupon,
+} from '../Features/Cart/cartSlice';
 
 /**
  * Custom Reusable Hook: useCheckout
  * Encapsulates coupon application, order submission, loading states, and API error messaging.
  */
 export function useCheckout() {
-  const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const dispatch = useDispatch();
+  const appliedCoupon = useSelector(selectAppliedCoupon);
+
+  const [couponCode, setCouponCode] = useState(appliedCoupon?.code || '');
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState(null);
 
   const [submittingOrder, setSubmittingOrder] = useState(false);
   const [orderError, setOrderError] = useState(null);
   const [createdOrder, setCreatedOrder] = useState(null);
+
+  useEffect(() => {
+    if (appliedCoupon?.code) {
+      setCouponCode(appliedCoupon.code);
+    }
+  }, [appliedCoupon]);
 
   const applyCoupon = async (code, subtotal) => {
     if (!code) return;
@@ -22,18 +36,18 @@ export function useCheckout() {
       setCouponError(null);
       const res = await orderService.validateCoupon(code, subtotal);
       if (res?.status === 'success') {
-        setAppliedCoupon(res.data);
+        dispatch(setReduxAppliedCoupon(res.data));
       }
     } catch (err) {
       setCouponError(err.message || 'Invalid coupon');
-      setAppliedCoupon(null);
+      dispatch(removeReduxAppliedCoupon());
     } finally {
       setCouponLoading(false);
     }
   };
 
   const removeCoupon = () => {
-    setAppliedCoupon(null);
+    dispatch(removeReduxAppliedCoupon());
     setCouponCode('');
     setCouponError(null);
   };

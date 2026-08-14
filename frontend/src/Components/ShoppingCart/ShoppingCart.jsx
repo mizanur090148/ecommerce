@@ -116,7 +116,22 @@ const ShoppingCart = () => {
 
   const rawSubtotal = useSelector(selectCartTotalAmount);
   const numSubtotal = Number(rawSubtotal) || 0;
-  const numDiscount = Number(appliedCoupon?.discount_amount) || 0;
+
+  let numDiscount = 0;
+  if (appliedCoupon && numSubtotal > 0) {
+    if (appliedCoupon.min_spend && numSubtotal < Number(appliedCoupon.min_spend)) {
+      numDiscount = 0;
+    } else if (appliedCoupon.type === "percentage") {
+      numDiscount = (numSubtotal * Number(appliedCoupon.value)) / 100;
+    } else if (appliedCoupon.type === "fixed") {
+      numDiscount = Math.min(Number(appliedCoupon.value), numSubtotal);
+    } else if (appliedCoupon.type === "free_shipping") {
+      numDiscount = Number(appliedCoupon.value) || 0;
+    } else {
+      numDiscount = Number(appliedCoupon.discount_amount) || 0;
+    }
+  }
+
   const numShipping = 0;
   const numVat = 0;
   const numGrandTotal = Math.max(0, numSubtotal - numDiscount + numShipping + numVat);
@@ -254,41 +269,6 @@ const ShoppingCart = () => {
                       </tr>
                     )}
                   </tbody>
-                  <tfoot>
-                    <tr>
-                      <td colSpan="5" style={{ padding: "20px 0" }}>
-                        {cartItems.length > 0 && (
-                          <div className="shopCartFooterContainer">
-                            <form style={{ display: "flex", gap: "10px" }}>
-                              <input
-                                type="text"
-                                placeholder="Coupon Code (e.g. WELCOME10)"
-                                value={couponCode}
-                                onChange={(e) => setCouponCode(e.target.value)}
-                              />
-                              <button
-                                type="button"
-                                disabled={couponLoading}
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  applyCoupon(couponCode, numSubtotal);
-                                }}
-                              >
-                                {couponLoading ? "Applying..." : "Apply Coupon"}
-                              </button>
-                            </form>
-                            {couponError && <p style={{ color: "#e53e3e", fontSize: "0.85rem" }}>{couponError}</p>}
-                            {appliedCoupon && (
-                              <p style={{ color: "#07bc0c", fontSize: "0.85rem" }}>
-                                Coupon <b>{appliedCoupon.code}</b> applied! (-৳{numDiscount.toFixed(2)})
-                                <span onClick={removeCoupon} style={{ marginLeft: "8px", cursor: "pointer", textDecoration: "underline", color: "#e53e3e" }}>Remove</span>
-                              </p>
-                            )}
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  </tfoot>
                 </table>
               </div>
 
@@ -303,7 +283,7 @@ const ShoppingCart = () => {
                     {numDiscount > 0 && (
                       <tr>
                         <th>Discount ({appliedCoupon?.code})</th>
-                        <td style={{ color: "#07bc0c" }}>-৳{numDiscount.toFixed(2)}</td>
+                        <td style={{ color: "#07bc0c", fontWeight: "bold" }}>-৳{numDiscount.toFixed(2)}</td>
                       </tr>
                     )}
                     <tr>
@@ -316,11 +296,47 @@ const ShoppingCart = () => {
                     </tr>
                     <tr>
                       <th>Total</th>
-                      <td style={{ fontWeight: "bold", fontSize: "1.1rem" }}>৳{numGrandTotal.toFixed(2)}</td>
+                      <td style={{ fontWeight: "bold", fontSize: "1.2rem", color: "#3046d9" }}>৳{numGrandTotal.toFixed(2)}</td>
                     </tr>
                   </tbody>
                 </table>
+
+                {/* Coupon Code Section inside Cart Totals */}
+                {cartItems.length > 0 && (
+                  <div className="cartTotalsCouponSection">
+                    <div className="cartTotalsCouponHeader">
+                      <span>🎟️ Coupon Code</span>
+                    </div>
+                    <form className="cartTotalsCouponForm">
+                      <input
+                        type="text"
+                        placeholder="Enter coupon (e.g. WELCOME10)"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        disabled={couponLoading}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          applyCoupon(couponCode, numSubtotal);
+                        }}
+                      >
+                        {couponLoading ? "Applying..." : "Apply"}
+                      </button>
+                    </form>
+                    {couponError && <p className="cartTotalsCouponError">{couponError}</p>}
+                    {appliedCoupon && (
+                      <div className="cartTotalsCouponSuccess">
+                        <span>✓ Coupon <b>{appliedCoupon.code}</b> applied!</span>
+                        <button type="button" onClick={removeCoupon}>Remove</button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <button
+                  className="cartTotalsCheckoutBtn"
                   onClick={() => {
                     handleTabClick("cartTab2");
                     window.scrollTo({ top: 0, behavior: "smooth" });

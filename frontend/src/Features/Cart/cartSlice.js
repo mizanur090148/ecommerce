@@ -23,10 +23,39 @@ const saveCartItems = (items) => {
   }
 };
 
+/**
+ * Helper to load saved coupon from browser localStorage on app startup.
+ */
+const loadSavedCoupon = () => {
+  try {
+    const saved = localStorage.getItem("applied_coupon");
+    return saved ? JSON.parse(saved) : null;
+  } catch (e) {
+    return null;
+  }
+};
+
+/**
+ * Helper to save applied coupon to localStorage.
+ */
+const saveAppliedCoupon = (coupon) => {
+  try {
+    if (coupon) {
+      localStorage.setItem("applied_coupon", JSON.stringify(coupon));
+    } else {
+      localStorage.removeItem("applied_coupon");
+    }
+  } catch (e) {
+    console.error("Could not save coupon to localStorage", e);
+  }
+};
+
 const initialItems = loadSavedCartItems();
+const initialCoupon = loadSavedCoupon();
 
 const initialState = {
   items: initialItems,
+  appliedCoupon: initialCoupon,
   totalAmount: initialItems.reduce(
     (sum, item) => sum + (Number(item.productPrice) || 0) * (Number(item.quantity) || 1),
     0
@@ -87,17 +116,35 @@ const cartSlice = createSlice({
       }
       saveCartItems(state.items);
     },
+    setAppliedCoupon(state, action) {
+      state.appliedCoupon = action.payload;
+      saveAppliedCoupon(action.payload);
+    },
+    removeAppliedCoupon(state) {
+      state.appliedCoupon = null;
+      saveAppliedCoupon(null);
+    },
     clearCart(state) {
       state.items = [];
       state.totalAmount = 0;
+      state.appliedCoupon = null;
       saveCartItems([]);
+      saveAppliedCoupon(null);
     },
   },
 });
 
-export const { addToCart, removeFromCart, updateQuantity, clearCart } = cartSlice.actions;
+export const {
+  addToCart,
+  removeFromCart,
+  updateQuantity,
+  setAppliedCoupon,
+  removeAppliedCoupon,
+  clearCart,
+} = cartSlice.actions;
 
 export const selectCartItems = (state) => state.cart.items;
+export const selectAppliedCoupon = (state) => state.cart.appliedCoupon;
 
 export const selectCartTotalAmount = (state) => {
   if (!state.cart.items || state.cart.items.length === 0) return 0;

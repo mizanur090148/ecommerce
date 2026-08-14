@@ -95,8 +95,9 @@ class OrderApiController extends Controller
             'data' => [
                 'code' => $coupon->code,
                 'type' => $coupon->type,
-                'value' => $coupon->value,
+                'value' => (float)$coupon->value,
                 'discount_amount' => round($discountAmount, 2),
+                'min_spend' => $coupon->min_spend ? (float)$coupon->min_spend : null,
             ],
         ]);
     }
