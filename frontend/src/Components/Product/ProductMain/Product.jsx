@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Tooltip from "@mui/material/Tooltip";
 import Zoom from "@mui/material/Zoom";
 
@@ -11,7 +11,7 @@ import { useParams, Link } from "react-router-dom";
 import useProductDetails from "../../../Hooks/useProductDetails";
 
 import { GoChevronLeft, GoChevronRight } from "react-icons/go";
-import { FaStar, FaHeart } from "react-icons/fa";
+import { FaStar, FaHeart, FaSearchPlus, FaTimes, FaPlus, FaMinus, FaRedo } from "react-icons/fa";
 import { FiHeart } from "react-icons/fi";
 import { PiShareNetworkLight } from "react-icons/pi";
 import toast from "react-hot-toast";
@@ -35,10 +35,40 @@ const Product = () => {
 
   const [quantity, setQuantity] = useState(1);
 
+  // Ultra-Sleek Glass Magnifier State
+  const [isHovering, setIsHovering] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
+
+  // Lightbox Modal Zoom State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [zoomScale, setZoomScale] = useState(1.5);
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setZoomScale(1.5);
+  };
+
   const dispatch = useDispatch();
   const cartItems = useSelector((state) => state.cart.items);
   const wishlistItems = useSelector(selectWishListItems);
   const isWishlisted = product ? wishlistItems.some((item) => item.id === product.id) : false;
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && isModalOpen) {
+        setIsModalOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isModalOpen]);
+
+  const handleMouseMove = (e) => {
+    const bounds = e.currentTarget.getBoundingClientRect();
+    const x = Math.max(0, Math.min(100, ((e.clientX - bounds.left) / bounds.width) * 100));
+    const y = Math.max(0, Math.min(100, ((e.clientY - bounds.top) / bounds.height) * 100));
+    setMousePos({ x, y });
+  };
 
   const handleWishClick = async () => {
     if (!product) return;
@@ -52,36 +82,12 @@ const Product = () => {
       });
     }
 
-    if (authService.getCurrentUser()) {
+    const token = authService.getToken();
+    if (token) {
       try {
         await wishlistService.toggleWishlist(product.id);
-      } catch (e) {
-        console.error("Wishlist sync error", e);
-      }
-    }
-  };
-
-  const maxStock = product?.is_stock_managed ? product.stock_quantity : 999;
-
-  const increment = () => {
-    setQuantity((q) => {
-      if (q >= maxStock) {
-        toast.error(`Only ${maxStock} units available in stock.`, { id: "stock-limit" });
-        return maxStock;
-      }
-      return q + 1;
-    });
-  };
-  const decrement = () => setQuantity((q) => (q > 1 ? q - 1 : 1));
-
-  const handleInputChange = (event) => {
-    const value = parseInt(event.target.value);
-    if (!isNaN(value) && value > 0) {
-      if (value > maxStock) {
-        toast.error(`Only ${maxStock} units available in stock.`, { id: "stock-limit" });
-        setQuantity(maxStock);
-      } else {
-        setQuantity(value);
+      } catch (err) {
+        console.error("Wishlist sync error", err);
       }
     }
   };
@@ -89,31 +95,45 @@ const Product = () => {
   const handleAddToCart = () => {
     if (!product) return;
 
-    const price = activeVariant?.price || product.sale_price || product.price;
-    const imgUrl = activeImage || product.primary_image?.url || product.images?.[0]?.url || "";
+    const currentPrice = activeVariant?.price || product.sale_price || product.price;
 
-    const productDetails = {
+    const productPayload = {
       productID: product.id,
-      productName: product.name + (selectedColor ? ` (${selectedColor})` : "") + (selectedSize ? ` - ${selectedSize}` : ""),
-      productPrice: price,
-      frontImg: imgUrl,
-      quantity,
+      productName: product.name,
+      productPrice: currentPrice,
+      frontImg: activeImage || product.primary_image?.url || product.images?.[0]?.url || "",
+      backImg: product.images?.[1]?.url || activeImage || "",
+      color: selectedColor,
+      size: selectedSize,
+      quantity: quantity,
     };
 
-    const productInCart = cartItems.find((item) => item.productID === productDetails.productID);
+    const existingCartItem = cartItems.find(
+      (item) => item.productID === product.id && item.color === selectedColor && item.size === selectedSize
+    );
 
-    if (productInCart && productInCart.quantity >= 20) {
-      toast.error("Product limit reached", {
-        duration: 2000,
+    const totalQty = (existingCartItem?.quantity || 0) + quantity;
+
+    if (totalQty > 20) {
+      toast.error("Cart item limit reached (max 20 per item).", {
+        duration: 2500,
         style: { backgroundColor: "#ff4b4b", color: "white" },
       });
     } else {
-      dispatch(addToCart(productDetails));
-      toast.success(`Added ${quantity} to cart!`, {
-        duration: 2000,
+      dispatch(addToCart(productPayload));
+      toast.success(`Added ${quantity} x ${product.name} to cart!`, {
+        duration: 2500,
         style: { backgroundColor: "#07bc0c", color: "white" },
       });
     }
+  };
+
+  const handleQuantityIncrement = () => {
+    setQuantity((prev) => (prev < 20 ? prev + 1 : prev));
+  };
+
+  const handleQuantityDecrement = () => {
+    setQuantity((prev) => (prev > 1 ? prev - 1 : prev));
   };
 
   if (loading) {
@@ -135,8 +155,22 @@ const Product = () => {
     );
   }
 
-  const galleryImages = product.images?.map((img) => img.url) || [product.primary_image?.url];
+  const galleryImages = product.images?.length > 0
+    ? product.images.map((img) => img.url)
+    : [product.primary_image?.url || ""];
   const categoryName = product.categories?.[0]?.name || "Catalog";
+  const currentImg = activeImage || galleryImages[0];
+  const currentImgIdx = galleryImages.indexOf(currentImg);
+
+  const handleNextImg = () => {
+    const nextIdx = (currentImgIdx + 1) % galleryImages.length;
+    setActiveImage(galleryImages[nextIdx]);
+  };
+
+  const handlePrevImg = () => {
+    const prevIdx = (currentImgIdx - 1 + galleryImages.length) % galleryImages.length;
+    setActiveImage(galleryImages[prevIdx]);
+  };
 
   return (
     <>
@@ -151,14 +185,38 @@ const Product = () => {
                   onClick={() => setActiveImage(imgUrl)}
                   alt=""
                   style={{
-                    border: activeImage === imgUrl ? "2px solid #000" : "1px solid #eee",
+                    border: currentImg === imgUrl ? "2px solid #000" : "1px solid #eee",
                     cursor: "pointer",
+                    borderRadius: "4px",
                   }}
                 />
               ))}
             </div>
-            <div className="productFullImg">
-              <img src={activeImage || galleryImages[0]} alt={product.name} />
+
+            {/* Ultra-Sleek Glass Inner Magnifier Zoom */}
+            <div
+              className="productFullImg"
+              onMouseEnter={() => setIsHovering(true)}
+              onMouseLeave={() => setIsHovering(false)}
+              onMouseMove={handleMouseMove}
+              onClick={() => setIsModalOpen(true)}
+              title="Click to open Fullscreen Gallery Lightbox"
+            >
+              <img
+                src={currentImg}
+                alt={product.name}
+                className="mainZoomImage"
+                style={{
+                  transform: isHovering ? "scale(2.4)" : "scale(1)",
+                  transformOrigin: `${mousePos.x}% ${mousePos.y}%`,
+                  transition: isHovering ? "transform-origin 0.05s ease-out" : "transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), transform-origin 0.35s ease",
+                }}
+              />
+
+              <div className="zoomBadge">
+                <FaSearchPlus size={12} />
+                <span>Hover to Magnify • Click for Fullscreen</span>
+              </div>
             </div>
           </div>
 
@@ -175,130 +233,203 @@ const Product = () => {
             </div>
 
             <div className="productRating">
-              <FaStar color="#FEC78A" size={10} />
-              <FaStar color="#FEC78A" size={10} />
-              <FaStar color="#FEC78A" size={10} />
-              <FaStar color="#FEC78A" size={10} />
-              <FaStar color="#FEC78A" size={10} />
-              <span>({product.reviews_count || 0} customer reviews)</span>
+              <FaStar color="#FEC78A" size={12} />
+              <FaStar color="#FEC78A" size={12} />
+              <FaStar color="#FEC78A" size={12} />
+              <FaStar color="#FEC78A" size={12} />
+              <FaStar color="#FEC78A" size={12} />
+              <p>({product.reviews_count || 0} reviews)</p>
             </div>
 
             <div className="productPrice">
               <h3>
                 ৳{activeVariant?.price || product.sale_price || product.price}
-                {product.sale_price && (
-                  <span style={{ textDecoration: "line-through", color: "#aaa", marginLeft: "10px", fontSize: "0.7em" }}>
+                {product.sale_price && !activeVariant && (
+                  <span style={{ textDecoration: "line-through", color: "#888", marginLeft: "10px", fontSize: "0.8em" }}>
                     ৳{product.price}
                   </span>
                 )}
               </h3>
             </div>
 
-            {/* Stock Availability Badge */}
-            <div className="productStockBadge" style={{ margin: "12px 0" }}>
-              {product.stock_status === "out_of_stock" || (product.is_stock_managed && product.stock_quantity <= 0) ? (
-                <span style={{ background: "#fed7d7", color: "#9b2c2c", padding: "5px 12px", borderRadius: "4px", fontSize: "0.85rem", fontWeight: "bold" }}>
-                  ✕ Sold Out
-                </span>
-              ) : (
-                <span style={{ background: "#c6f6d5", color: "#22543d", padding: "5px 12px", borderRadius: "4px", fontSize: "0.85rem", fontWeight: "bold" }}>
-                  ✓ In Stock {product.is_stock_managed ? `(${product.stock_quantity} available)` : ""}
-                </span>
+            <div className="productDescription">
+              <p>{product.short_description || product.description || "Premium quality e-commerce product."}</p>
+            </div>
+
+            <div className="productSizeColor">
+              {/* Dynamic Variant Selector */}
+              {product.variants && product.variants.length > 0 && (
+                <div className="productVariants" style={{ marginBottom: "15px" }}>
+                  <p style={{ fontWeight: "600", fontSize: "14px", marginBottom: "8px" }}>Select Option / Model:</p>
+                  <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                    {product.variants.map((v) => (
+                      <button
+                        key={v.id}
+                        onClick={() => {
+                          if (v.attributes?.color) setSelectedColor(v.attributes.color);
+                          if (v.attributes?.size) setSelectedSize(v.attributes.size);
+                        }}
+                        style={{
+                          padding: "8px 14px",
+                          border: activeVariant?.id === v.id ? "2px solid #000" : "1px solid #ccc",
+                          background: activeVariant?.id === v.id ? "#000" : "#fff",
+                          color: activeVariant?.id === v.id ? "#fff" : "#000",
+                          borderRadius: "4px",
+                          fontWeight: "500",
+                          fontSize: "13px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {v.name || Object.values(v.attributes || {}).join(" / ")} (৳{v.price})
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Sizes */}
+              {product.sizes && product.sizes.length > 0 && (
+                <div className="productSize">
+                  <p>Size: <strong>{selectedSize}</strong></p>
+                  <div className="sizeBtn">
+                    {product.sizes.map((s) => (
+                      <button
+                        key={s}
+                        className={selectedSize === s ? "active" : ""}
+                        onClick={() => setSelectedSize(s)}
+                        style={{
+                          background: selectedSize === s ? "#000" : "#fff",
+                          color: selectedSize === s ? "#fff" : "#000",
+                        }}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Colors */}
+              {product.colors && product.colors.length > 0 && (
+                <div className="productColor">
+                  <p>Color: <strong>{selectedColor}</strong></p>
+                  <div className="colorBtn">
+                    {product.colors.map((c) => (
+                      <button
+                        key={c}
+                        onClick={() => setSelectedColor(c)}
+                        style={{
+                          backgroundColor: c.toLowerCase(),
+                          border: selectedColor === c ? "2px solid #000" : "1px solid #ddd",
+                        }}
+                        className={selectedColor === c ? "highlighted" : ""}
+                        title={c}
+                      />
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
 
-            <div className="productDescription">
-              <p>{product.short_description || product.description}</p>
-            </div>
-
-            {/* Colors Selection */}
-            {product.type === "configurable" && (
-              <div className="productColor">
-                <p>Color: {selectedColor || "Select Color"}</p>
-                <div className="colorBox">
-                  {["Black", "Red", "Blue"].map((cName) => (
-                    <button
-                      key={cName}
-                      type="button"
-                      onClick={() => setSelectedColor(cName)}
-                      style={{
-                        padding: "6px 14px",
-                        marginRight: "8px",
-                        borderRadius: "6px",
-                        border: selectedColor === cName ? "2px solid #000" : "1px solid #ccc",
-                        fontWeight: selectedColor === cName ? "bold" : "normal",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {cName}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Sizes Selection */}
-            {product.type === "configurable" && (
-              <div className="productSize">
-                <p>Size: {selectedSize || "Select Size"}</p>
-                <div className="sizeBtn">
-                  {["S", "M", "L", "XL"].map((sVal) => (
-                    <button
-                      key={sVal}
-                      type="button"
-                      onClick={() => setSelectedSize(sVal)}
-                      style={{
-                        padding: "6px 14px",
-                        marginRight: "8px",
-                        borderRadius: "6px",
-                        border: selectedSize === sVal ? "2px solid #000" : "1px solid #ccc",
-                        fontWeight: selectedSize === sVal ? "bold" : "normal",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {sVal}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Quantity and Cart */}
             <div className="productCartQuantity">
               <div className="productQuantity">
-                <button onClick={decrement}>-</button>
-                <input type="text" value={quantity} onChange={handleInputChange} />
-                <button onClick={increment}>+</button>
+                <button type="button" onClick={handleQuantityDecrement}>-</button>
+                <input type="text" value={quantity} readOnly />
+                <button type="button" onClick={handleQuantityIncrement}>+</button>
               </div>
               <div className="productCartBtn">
-                {product.stock_status === "out_of_stock" || (product.is_stock_managed && product.stock_quantity <= 0) ? (
-                  <button disabled style={{ background: "#a0aec0", cursor: "not-allowed" }}>
-                    Sold Out
-                  </button>
-                ) : (
-                  <button onClick={handleAddToCart}>Add to Cart</button>
-                )}
+                <button type="button" onClick={handleAddToCart}>
+                  Add to Cart
+                </button>
               </div>
             </div>
 
-            <div className="productWishList">
-              <button onClick={handleWishClick}>
-                {isWishlisted ? <FaHeart color="red" /> : <FiHeart color="#767676" />}
-                <p>{isWishlisted ? "Added to Wishlist" : "Add to Wishlist"}</p>
-              </button>
+            <div className="productWishShare">
+              <div className="productWishList">
+                <button type="button" onClick={handleWishClick}>
+                  {isWishlisted ? <FaHeart color="red" size={18} /> : <FiHeart size={18} />}
+                  <p>{isWishlisted ? "In Wishlist" : "Add to Wishlist"}</p>
+                </button>
+              </div>
+              <div className="productShare">
+                <PiShareNetworkLight size={22} />
+                <span>Share</span>
+              </div>
             </div>
 
-            <div className="productMeta">
-              <p>SKU: <span>{activeVariant?.sku || product.sku}</span></p>
-              <p>Category: <span>{categoryName}</span></p>
+            <div className="productTags">
+              <p>
+                SKU: <span>{product.sku || `PRD-${product.id}`}</span>
+              </p>
+              <p>
+                Category: <span>{categoryName}</span>
+              </p>
+              <p>
+                Availability:{" "}
+                <span style={{ color: product.stock_quantity > 0 ? "#07bc0c" : "#e53e3e", fontWeight: "600" }}>
+                  {product.stock_quantity > 0 ? `In Stock (${product.stock_quantity} available)` : "Out of Stock"}
+                </span>
+              </p>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Full-Screen Lightbox Gallery Modal */}
+      {isModalOpen && (
+        <div className="imageZoomModalOverlay" onClick={closeModal}>
+          <div className="imageZoomModalContent" onClick={(e) => e.stopPropagation()}>
+            {/* Top Toolbar */}
+            <div className="imageZoomToolbar">
+              <span className="imageZoomTitle">{product.name} ({currentImgIdx + 1} / {galleryImages.length})</span>
+              <div className="imageZoomActions">
+                <button type="button" onClick={() => setZoomScale((prev) => Math.min(prev + 0.5, 4))} title="Zoom In">
+                  <FaPlus size={14} />
+                </button>
+                <button type="button" onClick={() => setZoomScale((prev) => Math.max(prev - 0.5, 1))} title="Zoom Out">
+                  <FaMinus size={14} />
+                </button>
+                <button type="button" onClick={() => setZoomScale(1)} title="Reset Zoom">
+                  <FaRedo size={12} />
+                </button>
+                <button type="button" className="closeBtn" onClick={closeModal} title="Close (Esc)">
+                  <FaTimes size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Gallery Navigation Arrows */}
+            {galleryImages.length > 1 && (
+              <>
+                <button type="button" className="lightboxArrow left" onClick={handlePrevImg}>
+                  <GoChevronLeft size={30} />
+                </button>
+                <button type="button" className="lightboxArrow right" onClick={handleNextImg}>
+                  <GoChevronRight size={30} />
+                </button>
+              </>
+            )}
+
+            {/* Image Stage */}
+            <div className="imageZoomStage">
+              <img
+                src={currentImg}
+                alt={product.name}
+                style={{
+                  transform: `scale(${zoomScale})`,
+                  transition: "transform 0.2s ease-out",
+                  maxHeight: "82vh",
+                  maxWidth: "85vw",
+                  objectFit: "contain",
+                  cursor: zoomScale > 1 ? "grab" : "zoom-in",
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
 
 export default Product;
-
-

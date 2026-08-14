@@ -26,13 +26,164 @@
 
 .productFullImg {
   position: relative;
-}
-
-.productFullImg img {
   width: 520px;
   height: 520px;
+  overflow: hidden;
+  border-radius: 12px;
+  background-color: #f8f9fa;
+  cursor: zoom-in;
+  border: 1px solid #edf2f7;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.productFullImg img.mainZoomImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.zoomBadge {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  background: rgba(17, 24, 39, 0.75);
+  color: #ffffff;
+  padding: 7px 14px;
+  border-radius: 30px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   pointer-events: none;
-  background-color: #767676;
+  backdrop-filter: blur(8px);
+  z-index: 5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: opacity 0.2s ease;
+}
+
+/* Lightbox Modal CSS */
+.imageZoomModalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(6px);
+}
+
+.imageZoomModalContent {
+  position: relative;
+  width: 90vw;
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.imageZoomToolbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  z-index: 10000;
+  color: #fff;
+}
+
+.imageZoomTitle {
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 60%;
+}
+
+.imageZoomActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.imageZoomActions button {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.imageZoomActions button:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.imageZoomActions button.closeBtn {
+  background: #e53e3e;
+}
+
+.imageZoomActions button.closeBtn:hover {
+  background: #c53030;
+}
+
+.imageZoomStage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
+.lightboxArrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10001;
+  transition: background 0.2s;
+}
+
+.lightboxArrow:hover {
+  background: rgba(255, 255, 255, 0.5);
+  color: #000;
+}
+
+.lightboxArrow.left {
+  left: 20px;
+}
+
+.lightboxArrow.right {
+  right: 20px;
 }
 
 .buttonsGroup {
