@@ -20,6 +20,7 @@ import { FaPinterest } from "react-icons/fa";
 
 import Badge from "@mui/material/Badge";
 import SearchModal from "./SearchModal";
+import WishlistDrawer from "./WishlistDrawer";
 
 const Navbar = () => {
   const cart = useSelector((state) => state.cart);
@@ -27,6 +28,7 @@ const Navbar = () => {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -105,7 +107,7 @@ const Navbar = () => {
               horizontal: "right",
             }}
           >
-            <FiHeart size={22} style={{ cursor: "pointer", color: wishlistItems.length > 0 ? "#e53e3e" : "inherit" }} onClick={scrollToTop} />
+            <FiHeart size={22} style={{ cursor: "pointer", color: wishlistItems.length > 0 ? "#e53e3e" : "inherit" }} onClick={() => setIsWishlistOpen(true)} />
           </Badge>
           {/* <RiMenu2Line size={22} /> */}
         </div>
@@ -218,6 +220,9 @@ const Navbar = () => {
 
       {/* Instant Search Overlay Modal */}
       <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+
+      {/* Slide-Over Wishlist Drawer */}
+      <WishlistDrawer isOpen={isWishlistOpen} onClose={() => setIsWishlistOpen(false)} />
     </>
   );
 };

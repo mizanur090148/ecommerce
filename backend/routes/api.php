@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthApiController;
+use App\Http\Controllers\Api\V1\ContactApiController;
 use App\Http\Controllers\Api\V1\CustomerApiController;
 use App\Http\Controllers\Api\V1\OrderApiController;
 use App\Http\Controllers\Api\V1\PaymentApiController;
@@ -12,6 +13,7 @@ Route::prefix('v1')->group(function () {
     // Auth REST APIs
     Route::post('/auth/register', [AuthApiController::class, 'register']);
     Route::post('/auth/login', [AuthApiController::class, 'login']);
+    Route::post('/contact', [ContactApiController::class, 'store']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/auth/me', [AuthApiController::class, 'me']);
