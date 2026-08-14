@@ -14,7 +14,7 @@ export default function Dashboard({ metrics }) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Revenue</p>
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">${kpis.total_revenue}</h3>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">৳{kpis.total_revenue}</h3>
             </div>
             <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
               <DollarSign className="w-6 h-6" />
@@ -103,7 +103,7 @@ export default function Dashboard({ metrics }) {
                       </span>
                     </td>
                     <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
-                      ${order.grand_total}
+                      ৳{order.grand_total}
                     </td>
                     <td className="py-3.5 px-4 text-right">
                       <Link

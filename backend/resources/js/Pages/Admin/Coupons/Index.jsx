@@ -154,7 +154,7 @@ export default function Index({ coupons }) {
 
             <div>
               <label className="block text-sm font-semibold mb-1">
-                {data.type === "percentage" ? "Discount Percentage (%) *" : data.type === "fixed" ? "Discount Amount ($) *" : "Shipping Discount Value ($)"}
+                {data.type === "percentage" ? "Discount Percentage (%) *" : data.type === "fixed" ? "Discount Amount (৳) *" : "Shipping Discount Value (৳)"}
               </label>
               <input
                 type="number"
@@ -168,7 +168,7 @@ export default function Index({ coupons }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold mb-1">Min Spend ($)</label>
+                <label className="block text-sm font-semibold mb-1">Min Spend (৳)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -252,11 +252,11 @@ export default function Index({ coupons }) {
                       {c.type === "percentage" ? (
                         <span className="text-emerald-600 dark:text-emerald-400">{c.value}% OFF</span>
                       ) : c.type === "fixed" ? (
-                        <span className="text-indigo-600 dark:text-indigo-400">${c.value} OFF</span>
+                        <span className="text-indigo-600 dark:text-indigo-400">৳{c.value} OFF</span>
                       ) : (
                         <span className="text-sky-600 dark:text-sky-400">Free Shipping</span>
                       )}
-                      {c.min_spend && <span className="block text-xs text-slate-400">Min spend: ${c.min_spend}</span>}
+                      {c.min_spend && <span className="block text-xs text-slate-400">Min spend: ৳{c.min_spend}</span>}
                     </td>
                     <td className="py-3 px-4 text-xs font-medium text-slate-600 dark:text-slate-300">
                       <div>Used: {c.used_count} times</div>

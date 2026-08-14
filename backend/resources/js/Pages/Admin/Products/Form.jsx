@@ -469,7 +469,7 @@ export default function Form({ product, categories = [], brands = [], tags = [],
                 <label className="block text-sm font-bold text-slate-900 dark:text-white">Pricing & Discount Calculator</label>
                 {data.price && data.sale_price && parseFloat(data.price) > parseFloat(data.sale_price) && (
                   <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold text-xs rounded-full">
-                    Discount Applied: Save ${(parseFloat(data.price) - parseFloat(data.sale_price)).toFixed(2)} (
+                    Discount Applied: Save ৳{(parseFloat(data.price) - parseFloat(data.sale_price)).toFixed(2)} (
                     {Math.round(((parseFloat(data.price) - parseFloat(data.sale_price)) / parseFloat(data.price)) * 100)}% OFF)
                   </span>
                 )}
@@ -497,7 +497,7 @@ export default function Form({ product, categories = [], brands = [], tags = [],
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold mb-1">Regular Price ($) *</label>
+                  <label className="block text-sm font-semibold mb-1">Regular Price (৳) *</label>
                   <input
                     type="number"
                     step="0.01"
@@ -509,7 +509,7 @@ export default function Form({ product, categories = [], brands = [], tags = [],
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold mb-1">Sale Price ($)</label>
+                  <label className="block text-sm font-semibold mb-1">Sale Price (৳)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -520,7 +520,7 @@ export default function Form({ product, categories = [], brands = [], tags = [],
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold mb-1">Cost Price ($)</label>
+                  <label className="block text-sm font-semibold mb-1">Cost Price (৳)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -1137,20 +1137,20 @@ export default function Form({ product, categories = [], brands = [], tags = [],
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center space-x-1.5 text-xs">
-                            <span className="line-through text-slate-400">${log.old_price ?? '0.00'}</span>
+                            <span className="line-through text-slate-400">৳{log.old_price ?? '0.00'}</span>
                             <span>➔</span>
-                            <span className="font-bold text-emerald-600 dark:text-emerald-400">${log.new_price}</span>
+                            <span className="font-bold text-emerald-600 dark:text-emerald-400">৳{log.new_price}</span>
                           </div>
                         </td>
                         <td className="py-3 px-4">
                           {log.old_sale_price !== log.new_sale_price ? (
                             <div className="flex items-center space-x-1.5 text-xs">
-                              <span className="line-through text-slate-400">${log.old_sale_price || '0.00'}</span>
+                              <span className="line-through text-slate-400">৳{log.old_sale_price || '0.00'}</span>
                               <span>➔</span>
-                              <span className="font-bold text-amber-600 dark:text-amber-400">${log.new_sale_price || '0.00'}</span>
+                              <span className="font-bold text-amber-600 dark:text-amber-400">৳{log.new_sale_price || '0.00'}</span>
                             </div>
                           ) : (
-                            <span className="text-xs text-slate-400">${log.new_sale_price || 'N/A'}</span>
+                            <span className="text-xs text-slate-400">৳{log.new_sale_price || 'N/A'}</span>
                           )}
                         </td>
                         <td className="py-3 px-4 text-xs text-slate-500">

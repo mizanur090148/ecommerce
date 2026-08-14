@@ -6,13 +6,13 @@ import { Save } from "lucide-react";
 export default function Index({ settings }) {
   const { data, setData, post, processing } = useForm({
     store_name: settings.store_name || "Uomo Enterprise eCommerce",
-    store_email: settings.store_email || "sale@uomo.com",
-    store_phone: settings.store_phone || "+1 246-345-0695",
-    store_address: settings.store_address || "1418 River Drive, Suite 35 Cottonhall, CA 9622 United States",
-    currency_code: settings.currency_code || "USD",
-    currency_symbol: settings.currency_symbol || "$",
-    shipping_flat_rate: settings.shipping_flat_rate || "5.00",
-    tax_rate_percent: settings.tax_rate_percent || "10.0",
+    store_email: settings.store_email || "support@ecommerce.com.bd",
+    store_phone: settings.store_phone || "+880 1733-714009",
+    store_address: settings.store_address || "Level 8, Tower 14, Gulshan-2, Dhaka 1212, Bangladesh",
+    currency_code: settings.currency_code || "BDT",
+    currency_symbol: settings.currency_symbol || "৳",
+    shipping_flat_rate: settings.shipping_flat_rate || "0.00",
+    tax_rate_percent: settings.tax_rate_percent || "0.0",
   });
 
   const handleSubmit = (e) => {
@@ -92,7 +92,7 @@ export default function Index({ settings }) {
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold mb-1">Flat Rate Shipping ($)</label>
+              <label className="block text-sm font-semibold mb-1">Flat Rate Shipping (৳)</label>
               <input
                 type="number"
                 step="0.01"

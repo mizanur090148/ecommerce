@@ -82,7 +82,7 @@ export default function Index({ products, categories, brands, filters }) {
                     {product.brand?.name || "N/A"}
                   </td>
                   <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
-                    ${product.price}
+                    ৳{product.price}
                   </td>
                   <td className="py-3.5 px-4">
                     <span
