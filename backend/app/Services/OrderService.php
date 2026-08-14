@@ -19,7 +19,9 @@ class OrderService
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('order_number', 'like', "%{$search}%")
-                  ->orWhere('customer_email', 'like', "%{$search}%");
+                  ->orWhere('customer_email', 'like', "%{$search}%")
+                  ->orWhere('customer_phone', 'like', "%{$search}%")
+                  ->orWhere('billing_address', 'like', "%{$search}%");
             });
         }
 
@@ -31,7 +33,7 @@ class OrderService
             $query->where('payment_status', $filters['payment_status']);
         }
 
-        return $query->latest()->paginate($perPage);
+        return $query->latest()->paginate($perPage)->withQueryString();
     }
 
     public function createOrder(array $data): Order
@@ -99,6 +101,7 @@ class OrderService
                 'customer_email' => $data['customer_email'],
                 'customer_phone' => $data['customer_phone'] ?? null,
                 'status' => 'pending',
+                'order_source' => $data['order_source'] ?? 'online',
                 'payment_status' => 'pending',
                 'payment_method' => $data['payment_method'] ?? 'Direct Bank Transfer',
                 'subtotal' => $subtotal,

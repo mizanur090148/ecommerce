@@ -15,6 +15,7 @@ class Order extends Model
         'customer_email',
         'customer_phone',
         'status',
+        'order_source',
         'payment_status',
         'payment_method',
         'subtotal',

@@ -34,7 +34,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::resource('brands', BrandController::class)->except(['create', 'edit']);
 
     // Sales & Orders
-    Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
+    Route::resource('orders', OrderController::class)->except(['edit', 'update']);
     Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
     Route::resource('coupons', CouponController::class)->except(['create', 'edit']);
 
