@@ -76,7 +76,7 @@ class OrderApiController extends Controller
         if ($coupon->min_spend && $request->subtotal < $coupon->min_spend) {
             return response()->json([
                 'status' => 'error',
-                'message' => "Minimum order amount of $" . number_format($coupon->min_spend, 2) . " required for this coupon.",
+                'message' => "Minimum order amount of ৳" . number_format($coupon->min_spend, 2) . " required for this coupon.",
             ], 422);
         }
 

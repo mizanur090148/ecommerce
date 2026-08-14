@@ -155,12 +155,15 @@
   color: #2b6cb0;
 }
 
-.orderStatusBadge.delivered {
+.orderStatusBadge.delivered,
+.orderStatusBadge.completed,
+.orderStatusBadge.paid {
   background: #c6f6d5;
   color: #22543d;
 }
 
-.orderStatusBadge.cancelled {
+.orderStatusBadge.cancelled,
+.orderStatusBadge.failed {
   background: #fed7d7;
   color: #9b2c2c;
 }
