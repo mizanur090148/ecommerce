@@ -19,12 +19,14 @@ import { FaYoutube } from "react-icons/fa";
 import { FaPinterest } from "react-icons/fa";
 
 import Badge from "@mui/material/Badge";
+import SearchModal from "./SearchModal";
 
 const Navbar = () => {
   const cart = useSelector((state) => state.cart);
   const wishlistItems = useSelector((state) => state.wishlist?.items || []);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -79,7 +81,7 @@ const Navbar = () => {
           </div>
         </div>
         <div className="iconContainer">
-          <FiSearch size={22} onClick={scrollToTop} />
+          <FiSearch size={22} onClick={() => setIsSearchOpen(true)} style={{ cursor: "pointer" }} />
           <Link to="/login" onClick={scrollToTop}>
             <FaRegUser size={22} />
           </Link>
@@ -213,6 +215,9 @@ const Navbar = () => {
           </div>
         </div>
       </nav>
+
+      {/* Instant Search Overlay Modal */}
+      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </>
   );
 };

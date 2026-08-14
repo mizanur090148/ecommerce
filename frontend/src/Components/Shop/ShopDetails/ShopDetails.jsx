@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "../../../Features/Cart/cartSlice";
 
 import Filter from "../Filters/Filter";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import useProducts from "../../../Hooks/useProducts";
 import { FiHeart } from "react-icons/fi";
 import { FaStar } from "react-icons/fa";
@@ -22,6 +22,8 @@ import { FaHeart } from "react-icons/fa";
 const ShopDetails = () => {
   const dispatch = useDispatch();
   const wishlistItems = useSelector(selectWishListItems);
+  const [searchParams] = useSearchParams();
+  const urlSearchQuery = searchParams.get("search");
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -29,6 +31,12 @@ const ShopDetails = () => {
   const { products, pagination, filters, loading, error, updateFilters, changePage } = useProducts({
     per_page: 12,
   });
+
+  React.useEffect(() => {
+    if (urlSearchQuery !== null) {
+      updateFilters({ search: urlSearchQuery });
+    }
+  }, [urlSearchQuery]);
 
   const handleWishlistToggle = async (product) => {
     dispatch(toggleWishList(product));
