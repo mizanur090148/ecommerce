@@ -149,9 +149,18 @@ class ProductApiController extends Controller
     public function filters(): JsonResponse
     {
         $categories = Category::where('is_active', true)
-            ->withCount('products')
+            ->whereHas('products', function ($q) {
+                $q->where('is_active', true);
+            })
+            ->withCount(['products' => function ($q) {
+                $q->where('is_active', true);
+            }])
             ->orderBy('name', 'asc')
-            ->get(['id', 'name', 'slug', 'products_count', 'image', 'description', 'is_featured']);
+            ->get(['id', 'name', 'slug', 'products_count', 'image', 'description', 'is_featured'])
+            ->map(function ($cat) {
+                $cat->image = $cat->image_url ?? $cat->image;
+                return $cat;
+            });
 
         $specialCategories = Category::where('is_active', true)
             ->where('is_featured', true)
@@ -170,6 +179,11 @@ class ProductApiController extends Controller
 
             $specialCategories = $specialCategories->concat($fillCategories);
         }
+
+        $specialCategories = $specialCategories->map(function ($cat) {
+            $cat->image = $cat->image_url ?? $cat->image;
+            return $cat;
+        });
 
         $brands = Brand::where('is_active', true)
             ->withCount('products')

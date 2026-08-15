@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./CollectionBox.css";
 import { Link } from "react-router-dom";
 import productService from "../../../Services/productService";
+import { formatImageUrl } from "../../../Services/apiClient";
 
 import col1 from "../../../Assets/Collection/collection1.jpg";
 import col2 from "../../../Assets/Collection/collection2.jpg";
@@ -32,13 +33,9 @@ const CollectionBox = () => {
     });
   };
 
-  // Fallback default categories if API data not loaded
-  const displayCategories = categories.length > 0 ? categories : [
-    { name: "Women Collection", slug: "women", image: col1 },
-    { name: "Men Collection", slug: "men", image: col2 },
-    { name: "Kids Collection", slug: "kids", image: col3 },
-    { name: "Accessories", slug: "accessories", image: col1 },
-  ];
+  if (categories.length === 0) {
+    return null;
+  }
 
   return (
     <div className="specialCategoriesContainer">
@@ -49,8 +46,9 @@ const CollectionBox = () => {
       </div>
 
       <div className="specialCategoriesGrid">
-        {displayCategories.map((cat, idx) => {
-          const bgImg = cat.image || defaultImages[idx % defaultImages.length];
+        {categories.map((cat, idx) => {
+          const rawImg = cat.image_url || cat.image;
+          const bgImg = rawImg ? formatImageUrl(rawImg) : defaultImages[idx % defaultImages.length];
           const catSlug = cat.slug || cat.name;
 
           return (

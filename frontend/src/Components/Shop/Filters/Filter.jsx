@@ -177,8 +177,10 @@ const Filter = ({ filters = {}, onFilterChange }) => {
               <h5 className="filterHeading">Product Categories</h5>
             </AccordionSummary>
             <AccordionDetails sx={{ padding: 0 }}>
-              {categories.length > 0 ? (
-                categories.map((category) => {
+              {categories.filter(cat => (cat.products_count === undefined || cat.products_count > 0)).length > 0 ? (
+                categories
+                  .filter(cat => (cat.products_count === undefined || cat.products_count > 0))
+                  .map((category) => {
                   const filterVal = (filters.category || "").toLowerCase();
                   const catName = (category.name || "").toLowerCase();
                   const catSlug = (category.slug || "").toLowerCase();

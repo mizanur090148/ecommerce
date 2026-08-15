@@ -10,6 +10,7 @@ export default function Index({ categories, parentCategories }) {
     name: "",
     parent_id: "",
     description: "",
+    image: null,
     is_active: true,
     is_featured: false,
   });
@@ -20,6 +21,7 @@ export default function Index({ categories, parentCategories }) {
       name: category.name,
       parent_id: category.parent_id || "",
       description: category.description || "",
+      image: category.image || null,
       is_active: category.is_active ?? true,
       is_featured: category.is_featured ?? false,
     });
@@ -33,9 +35,16 @@ export default function Index({ categories, parentCategories }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (editingCategory) {
-      put(route("admin.categories.update", editingCategory.id), {
-        onSuccess: () => handleCancelEdit(),
-      });
+      router.post(
+        route("admin.categories.update", editingCategory.id),
+        {
+          _method: "PUT",
+          ...data,
+        },
+        {
+          onSuccess: () => handleCancelEdit(),
+        }
+      );
     } else {
       post(route("admin.categories.store"), {
         onSuccess: () => reset(),
@@ -69,7 +78,7 @@ export default function Index({ categories, parentCategories }) {
             )}
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" encType="multipart/form-data">
             <div>
               <label className="block text-sm font-semibold mb-1">Category Name *</label>
               <input
@@ -98,6 +107,45 @@ export default function Index({ categories, parentCategories }) {
                     </option>
                   ))}
               </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold mb-1">Category Image</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setData("image", e.target.files[0]);
+                  }
+                }}
+                className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+              />
+              {data.image && typeof data.image === "object" && (
+                <div className="mt-2.5 flex items-center space-x-3 bg-slate-50 dark:bg-slate-700/50 p-2.5 rounded-xl border border-slate-200 dark:border-slate-600">
+                  <img
+                    src={URL.createObjectURL(data.image)}
+                    alt="New Upload Preview"
+                    className="w-16 h-16 object-cover rounded-lg border border-indigo-200 shadow-sm"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 block">New Upload Preview</span>
+                    <span className="text-xs text-slate-500 truncate max-w-[160px] block">{data.image.name}</span>
+                  </div>
+                </div>
+              )}
+              {data.image && typeof data.image === "string" && (
+                <div className="mt-2.5 flex items-center space-x-3 bg-slate-50 dark:bg-slate-700/50 p-2.5 rounded-xl border border-slate-200 dark:border-slate-600">
+                  <img
+                    src={data.image}
+                    alt="Current Category Image"
+                    className="w-16 h-16 object-cover rounded-lg border border-slate-200 shadow-sm"
+                  />
+                  <div>
+                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 block">Current Image</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center space-x-2 pt-2">
@@ -133,6 +181,7 @@ export default function Index({ categories, parentCategories }) {
             <table className="w-full text-left border-collapse text-sm">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400">
+                  <th className="py-3 px-4 font-semibold">Image</th>
                   <th className="py-3 px-4 font-semibold">Category Name</th>
                   <th className="py-3 px-4 font-semibold">Parent Category</th>
                   <th className="py-3 px-4 font-semibold text-right">Actions</th>
@@ -141,6 +190,15 @@ export default function Index({ categories, parentCategories }) {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
                 {categories.data.map((cat) => (
                   <tr key={cat.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                    <td className="py-3 px-4">
+                      {cat.image ? (
+                        <img src={cat.image} alt={cat.name} className="w-10 h-10 object-cover rounded-lg border border-slate-200" />
+                      ) : (
+                        <div className="w-10 h-10 bg-slate-100 dark:bg-slate-700 rounded-lg flex items-center justify-center text-[10px] text-slate-400 font-medium">
+                          No img
+                        </div>
+                      )}
+                    </td>
                     <td className="py-3 px-4 font-semibold text-slate-900 dark:text-white">
                       {cat.name}
                       {cat.is_featured && (

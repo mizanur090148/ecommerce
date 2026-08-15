@@ -70,4 +70,33 @@ export const apiClient = {
   },
 };
 
+/**
+ * Dynamically extract backend server origin domain (production or local).
+ */
+export const getBackendOrigin = () => {
+  const apiBase = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api/v1';
+  try {
+    const url = new URL(apiBase);
+    return url.origin;
+  } catch (e) {
+    return window.location.origin;
+  }
+};
+
+/**
+ * Environment-agnostic Image URL Formatter.
+ * Works seamlessly across Localhost, Staging, and Production environments.
+ */
+export const formatImageUrl = (imgPath) => {
+  if (!imgPath) return '';
+  if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
+    return imgPath;
+  }
+  const origin = getBackendOrigin();
+  if (imgPath.startsWith('/')) {
+    return `${origin}${imgPath}`;
+  }
+  return `${origin}/storage/${imgPath}`;
+};
+
 export default apiClient;
