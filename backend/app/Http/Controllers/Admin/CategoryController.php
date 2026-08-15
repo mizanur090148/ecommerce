@@ -28,7 +28,9 @@ class CategoryController extends Controller
             'name' => 'required|string|max:255',
             'parent_id' => 'nullable|exists:categories,id',
             'description' => 'nullable|string',
+            'image' => 'nullable|string',
             'is_active' => 'boolean',
+            'is_featured' => 'boolean',
         ]);
 
         $validated['slug'] = Str::slug($validated['name']);
@@ -43,7 +45,9 @@ class CategoryController extends Controller
             'name' => 'required|string|max:255',
             'parent_id' => 'nullable|exists:categories,id',
             'description' => 'nullable|string',
+            'image' => 'nullable|string',
             'is_active' => 'boolean',
+            'is_featured' => 'boolean',
         ]);
 
         // Prevent selecting self as parent

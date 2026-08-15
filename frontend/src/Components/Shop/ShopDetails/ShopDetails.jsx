@@ -24,19 +24,28 @@ const ShopDetails = () => {
   const wishlistItems = useSelector(selectWishListItems);
   const [searchParams] = useSearchParams();
   const urlSearchQuery = searchParams.get("search");
+  const urlCategoryQuery = searchParams.get("category");
+  const urlBrandQuery = searchParams.get("brand");
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  // Centralized Reusable React Hook
+  // Centralized Reusable React Hook with initial URL filter values
   const { products, pagination, filters, loading, error, updateFilters, changePage } = useProducts({
     per_page: 12,
+    category: urlCategoryQuery || '',
+    brand: urlBrandQuery || '',
+    search: urlSearchQuery || '',
   });
 
   React.useEffect(() => {
-    if (urlSearchQuery !== null) {
-      updateFilters({ search: urlSearchQuery });
+    const newFilters = {};
+    if (urlSearchQuery !== null) newFilters.search = urlSearchQuery;
+    if (urlCategoryQuery !== null) newFilters.category = urlCategoryQuery;
+    if (urlBrandQuery !== null) newFilters.brand = urlBrandQuery;
+    if (Object.keys(newFilters).length > 0) {
+      updateFilters(newFilters);
     }
-  }, [urlSearchQuery]);
+  }, [urlSearchQuery, urlCategoryQuery, urlBrandQuery]);
 
   const handleWishlistToggle = async (product) => {
     dispatch(toggleWishList(product));

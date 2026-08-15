@@ -18,8 +18,12 @@ class ProductApiController extends Controller
             ->where('is_active', true);
 
         if ($request->filled('category')) {
-            $query->whereHas('categories', function ($q) use ($request) {
-                $q->where('slug', $request->category)->orWhere('name', $request->category);
+            $catSearch = trim($request->category);
+            $query->whereHas('categories', function ($q) use ($catSearch) {
+                $q->where('slug', $catSearch)
+                  ->orWhere('name', $catSearch)
+                  ->orWhere('slug', 'like', '%' . \Illuminate\Support\Str::slug($catSearch) . '%')
+                  ->orWhere('name', 'like', '%' . $catSearch . '%');
             });
         }
 
@@ -147,7 +151,25 @@ class ProductApiController extends Controller
         $categories = Category::where('is_active', true)
             ->withCount('products')
             ->orderBy('name', 'asc')
-            ->get(['id', 'name', 'slug', 'products_count']);
+            ->get(['id', 'name', 'slug', 'products_count', 'image', 'description', 'is_featured']);
+
+        $specialCategories = Category::where('is_active', true)
+            ->where('is_featured', true)
+            ->withCount('products')
+            ->orderBy('order', 'asc')
+            ->take(4)
+            ->get(['id', 'name', 'slug', 'image', 'description', 'products_count']);
+
+        if ($specialCategories->count() < 4) {
+            $existingIds = $specialCategories->pluck('id')->toArray();
+            $fillCategories = Category::where('is_active', true)
+                ->whereNotIn('id', $existingIds)
+                ->withCount('products')
+                ->take(4 - $specialCategories->count())
+                ->get(['id', 'name', 'slug', 'image', 'description', 'products_count']);
+
+            $specialCategories = $specialCategories->concat($fillCategories);
+        }
 
         $brands = Brand::where('is_active', true)
             ->withCount('products')
@@ -161,6 +183,7 @@ class ProductApiController extends Controller
             'status' => 'success',
             'data' => [
                 'categories' => $categories,
+                'special_categories' => $specialCategories,
                 'brands' => $brands,
                 'min_price' => floor($minPrice),
                 'max_price' => ceil($maxPrice > 0 ? $maxPrice : 1000),

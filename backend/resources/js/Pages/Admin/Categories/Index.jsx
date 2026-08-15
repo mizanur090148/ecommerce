@@ -11,6 +11,7 @@ export default function Index({ categories, parentCategories }) {
     parent_id: "",
     description: "",
     is_active: true,
+    is_featured: false,
   });
 
   const handleEditClick = (category) => {
@@ -19,7 +20,8 @@ export default function Index({ categories, parentCategories }) {
       name: category.name,
       parent_id: category.parent_id || "",
       description: category.description || "",
-      is_active: category.is_active,
+      is_active: category.is_active ?? true,
+      is_featured: category.is_featured ?? false,
     });
   };
 
@@ -98,6 +100,19 @@ export default function Index({ categories, parentCategories }) {
               </select>
             </div>
 
+            <div className="flex items-center space-x-2 pt-2">
+              <input
+                type="checkbox"
+                id="is_featured"
+                checked={data.is_featured}
+                onChange={(e) => setData("is_featured", e.target.checked)}
+                className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+              />
+              <label htmlFor="is_featured" className="text-sm font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">
+                Special Category (Show on Homepage)
+              </label>
+            </div>
+
             <button
               type="submit"
               disabled={processing}
@@ -128,6 +143,11 @@ export default function Index({ categories, parentCategories }) {
                   <tr key={cat.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
                     <td className="py-3 px-4 font-semibold text-slate-900 dark:text-white">
                       {cat.name}
+                      {cat.is_featured && (
+                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300">
+                          ⭐ Special
+                        </span>
+                      )}
                     </td>
                     <td className="py-3 px-4 text-slate-500 dark:text-slate-400">
                       {cat.parent ? (

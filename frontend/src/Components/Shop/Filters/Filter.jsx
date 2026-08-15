@@ -58,7 +58,10 @@ const Filter = ({ filters = {}, onFilterChange }) => {
   }, [filters.min_price, filters.max_price, dbMinPrice, dbMaxPrice]);
 
   const handleCategoryClick = (catName) => {
-    const newCat = filters.category === catName ? "" : catName;
+    const activeVal = (filters.category || "").toLowerCase();
+    const targetName = (catName || "").toLowerCase();
+    const isCurrentlyActive = activeVal && (activeVal === targetName || activeVal.includes(targetName) || targetName.includes(activeVal));
+    const newCat = isCurrentlyActive ? "" : catName;
     if (onFilterChange) {
       onFilterChange({ category: newCat });
     }
@@ -176,7 +179,18 @@ const Filter = ({ filters = {}, onFilterChange }) => {
             <AccordionDetails sx={{ padding: 0 }}>
               {categories.length > 0 ? (
                 categories.map((category) => {
-                  const isActive = filters.category === category.name;
+                  const filterVal = (filters.category || "").toLowerCase();
+                  const catName = (category.name || "").toLowerCase();
+                  const catSlug = (category.slug || "").toLowerCase();
+
+                  const isActive = Boolean(
+                    filterVal &&
+                    (filterVal === catName ||
+                     filterVal === catSlug ||
+                     catName.includes(filterVal) ||
+                     filterVal.includes(catName))
+                  );
+
                   return (
                     <p
                       key={category.id || category.name}
@@ -184,16 +198,18 @@ const Filter = ({ filters = {}, onFilterChange }) => {
                       style={{
                         cursor: "pointer",
                         fontWeight: isActive ? "bold" : "normal",
-                        color: isActive ? "#000" : "#555",
+                        color: isActive ? "#3046d9" : "#555",
                         display: "flex",
                         justifyContent: "space-between",
-                        padding: "4px 0",
-                        transition: "color 0.2s",
+                        padding: "6px 8px",
+                        borderRadius: "6px",
+                        backgroundColor: isActive ? "#edf2ff" : "transparent",
+                        transition: "all 0.2s ease",
                       }}
                     >
                       <span>{category.name}</span>
                       {category.products_count !== undefined && (
-                        <span style={{ fontSize: "0.85em", color: "#888" }}>
+                        <span style={{ fontSize: "0.85em", color: isActive ? "#3046d9" : "#888" }}>
                           ({category.products_count})
                         </span>
                       )}
