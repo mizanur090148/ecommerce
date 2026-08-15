@@ -14,7 +14,7 @@ const Home = () => {
       <CollectionBox />
       <Trendy />
       {/* <DealTimer /> */}
-      <Banner />
+      {/* <Banner /> */}
       <LimitedEdition />
       <Services />
     </>
