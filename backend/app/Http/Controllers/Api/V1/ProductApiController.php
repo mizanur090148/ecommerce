@@ -206,4 +206,27 @@ class ProductApiController extends Controller
             ],
         ]);
     }
+
+    public function banners(Request $request): JsonResponse
+    {
+        $type = $request->query('type');
+
+        $query = \App\Models\Banner::where('is_active', true);
+
+        if ($type) {
+            $query->where('type', $type);
+        }
+
+        $banners = $query->orderBy('sort_order', 'asc')->latest()->get();
+
+        $banners = $banners->map(function ($b) {
+            $b->image = $b->image_url ?? $b->image;
+            return $b;
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $banners,
+        ]);
+    }
 }

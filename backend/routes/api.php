@@ -37,6 +37,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/products/filters', [ProductApiController::class, 'filters']);
     Route::get('/products/{slug}', [ProductApiController::class, 'show']);
     Route::post('/products/{id}/reviews', [ProductApiController::class, 'storeReview']);
+    Route::get('/banners', [ProductApiController::class, 'banners']);
 
     // Orders & Checkout REST APIs
     Route::post('/checkout', [OrderApiController::class, 'store']);

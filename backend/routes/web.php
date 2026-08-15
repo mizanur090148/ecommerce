@@ -43,7 +43,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::patch('customers/{customer}/toggle-status', [CustomerController::class, 'toggleStatus'])->name('customers.toggle-status');
 
     // CMS & Marketing
-    Route::resource('banners', BannerController::class)->only(['index', 'store', 'destroy']);
+    Route::resource('banners', BannerController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('blogs', BlogController::class)->only(['index', 'store', 'destroy']);
 
     // Settings

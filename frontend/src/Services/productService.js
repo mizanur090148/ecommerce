@@ -36,6 +36,14 @@ export const productService = {
   async submitReview(productId, reviewData) {
     return apiClient.post(`/products/${productId}/reviews`, reviewData);
   },
+
+  /**
+   * Fetch active banners (e.g. hero, collection, deal, popup).
+   * @param {string} type
+   */
+  async getBanners(type = 'hero') {
+    return apiClient.get('/banners', { params: { type } });
+  },
 };
 
 export default productService;

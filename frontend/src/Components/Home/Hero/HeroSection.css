@@ -45,6 +45,29 @@
   display: flex;
 }
 
+.heroSliderDots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.heroDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.25);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.heroDot.active {
+  width: 24px;
+  border-radius: 6px;
+  background-color: #c22928;
+}
+
 .sectionleft a {
   text-decoration: none;
   color: black;
