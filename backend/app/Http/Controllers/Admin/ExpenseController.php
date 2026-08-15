@@ -46,9 +46,9 @@ class ExpenseController extends Controller
         $expenses = $query->latest('expense_date')->latest('id')->paginate(15)->withQueryString();
 
         // Summary Statistics
-        $todayCost = (float) Expense::whereDate('expense_date', Carbon::today())->sum('amount');
-        $thisWeekCost = (float) Expense::whereBetween('expense_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])->sum('amount');
-        $thisMonthCost = (float) Expense::whereBetween('expense_date', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])->sum('amount');
+        $todayCost = (float) Expense::whereDate('expense_date', Carbon::today()->toDateString())->sum('amount');
+        $thisWeekCost = (float) Expense::whereBetween('expense_date', [Carbon::now()->startOfWeek()->toDateString(), Carbon::now()->endOfWeek()->toDateString()])->sum('amount');
+        $thisMonthCost = (float) Expense::whereBetween('expense_date', [Carbon::now()->startOfMonth()->toDateString(), Carbon::now()->endOfMonth()->toDateString()])->sum('amount');
         $thisYearCost = (float) Expense::whereYear('expense_date', Carbon::now()->year)->sum('amount');
         $totalCost = (float) Expense::sum('amount');
 
