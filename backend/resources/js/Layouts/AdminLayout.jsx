@@ -19,7 +19,9 @@ import {
   Moon,
   Search,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Wallet,
+  BarChart3,
 } from "lucide-react";
 
 export default function AdminLayout({ children, title }) {
@@ -35,6 +37,8 @@ export default function AdminLayout({ children, title }) {
     { name: "Orders", href: route("admin.orders.index"), icon: ShoppingBag },
     { name: "Customers", href: route("admin.customers.index"), icon: Users },
     { name: "Coupons", href: route("admin.coupons.index"), icon: Ticket },
+    { name: "Expense Tracker", href: route("admin.expenses.index"), icon: Wallet },
+    { name: "Financial Reports", href: route("admin.reports.index"), icon: BarChart3 },
     { name: "Banners & CMS", href: route("admin.banners.index"), icon: ImageIcon },
     { name: "Blogs", href: route("admin.blogs.index"), icon: FileText },
     { name: "Settings", href: route("admin.settings.index"), icon: Settings },

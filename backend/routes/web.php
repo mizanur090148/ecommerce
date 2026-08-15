@@ -7,8 +7,10 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ExpenseController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -45,6 +47,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     // CMS & Marketing
     Route::resource('banners', BannerController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('blogs', BlogController::class)->only(['index', 'store', 'destroy']);
+
+    // Accounts & Expenses
+    Route::resource('expenses', ExpenseController::class);
+    Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
 
     // Settings
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
