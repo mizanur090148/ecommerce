@@ -125,4 +125,16 @@ class OrderController extends Controller
 
         return redirect()->route('admin.orders.index')->with('success', 'Order deleted successfully.');
     }
+
+    public function downloadInvoice(Order $order)
+    {
+        $order->load(['items.product', 'user']);
+
+        if (class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.invoice', ['order' => $order]);
+            return $pdf->download("Invoice-{$order->order_number}.pdf");
+        }
+
+        return view('pdf.invoice', ['order' => $order]);
+    }
 }

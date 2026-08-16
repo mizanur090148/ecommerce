@@ -21,6 +21,7 @@ import {
   MoreHorizontal,
   CheckCircle2,
   Receipt,
+  Download,
 } from "lucide-react";
 
 export default function Index({ expenses, summary, filters }) {
@@ -137,12 +138,22 @@ export default function Index({ expenses, summary, filters }) {
             Track carrying costs, delivery fees, employee salaries, and operational costs.
           </p>
         </div>
-        <button
-          onClick={handleOpenAdd}
-          className="px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-2xl transition shadow-xl shadow-indigo-600/30 flex items-center"
-        >
-          <Plus className="w-5 h-5 mr-2" /> Record New Expense
-        </button>
+        <div className="flex items-center space-x-3">
+          <a
+            href={route("admin.expenses.export-csv", { search, category: selectedCategory, payment_method: selectedPayment, start_date: startDate, end_date: endDate })}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-2xl transition shadow-md shadow-emerald-600/20 flex items-center shrink-0"
+          >
+            <Download className="w-4 h-4 mr-1.5" /> Export CSV
+          </a>
+          <button
+            onClick={handleOpenAdd}
+            className="px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-2xl transition shadow-xl shadow-indigo-600/30 flex items-center shrink-0"
+          >
+            <Plus className="w-4 h-4 mr-1.5" /> Record New Expense
+          </button>
+        </div>
       </div>
 
       {/* 5 Metric Cards Guaranteed in 1 Single Horizontal Row */}

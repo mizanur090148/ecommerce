@@ -22,6 +22,7 @@ import {
   Zap,
   Building,
   MoreHorizontal,
+  Download,
 } from "lucide-react";
 
 export default function Index({ period, date_range, metrics, category_breakdown, recent_expenses, recent_orders, filters }) {
@@ -73,7 +74,7 @@ export default function Index({ period, date_range, metrics, category_breakdown,
           </span>
         </div>
 
-        <div className="flex items-center space-x-1.5 flex-wrap gap-1">
+        <div className="flex items-center space-x-2">
           {[
             { key: "today", label: "Today" },
             { key: "this_week", label: "This Week" },
@@ -93,6 +94,15 @@ export default function Index({ period, date_range, metrics, category_breakdown,
               {p.label}
             </button>
           ))}
+
+          <a
+            href={route("admin.reports.export-csv", { period: activePeriod, start_date: startDate, end_date: endDate })}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition shadow-sm flex items-center ml-2 shrink-0"
+          >
+            <Download className="w-3.5 h-3.5 mr-1" /> Export CSV
+          </a>
         </div>
       </div>
 

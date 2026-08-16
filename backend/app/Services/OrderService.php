@@ -123,12 +123,20 @@ class OrderService
         });
     }
 
+    public function __construct(protected NotificationService $notificationService)
+    {
+    }
+
     public function updateOrderStatus(Order $order, string $status): Order
     {
         $order->update(['status' => $status]);
         if ($status === 'delivered') {
             $order->update(['payment_status' => 'paid']);
         }
+
+        // Trigger Automated SMS & Email Notification
+        $this->notificationService->sendOrderStatusNotification($order, $status);
+
         return $order;
     }
 }

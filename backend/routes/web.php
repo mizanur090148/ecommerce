@@ -38,6 +38,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     // Sales & Orders
     Route::resource('orders', OrderController::class)->except(['edit', 'update']);
     Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
+    Route::get('orders/{order}/invoice', [OrderController::class, 'downloadInvoice'])->name('orders.invoice');
     Route::resource('coupons', CouponController::class)->except(['create', 'edit']);
 
     // Customers
@@ -49,8 +50,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::resource('blogs', BlogController::class)->only(['index', 'store', 'destroy']);
 
     // Accounts & Expenses
+    Route::get('expenses/export-csv', [ExpenseController::class, 'exportCsv'])->name('expenses.export-csv');
     Route::resource('expenses', ExpenseController::class);
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('reports/export-csv', [ReportController::class, 'exportCsv'])->name('reports.export-csv');
 
     // Settings
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');

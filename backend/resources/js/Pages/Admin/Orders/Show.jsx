@@ -96,6 +96,14 @@ export default function Show({ order }) {
           </Link>
 
           <div className="flex items-center gap-3">
+            <a
+              href={route("admin.orders.invoice", order.id)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl shadow-sm transition"
+            >
+              <Printer className="w-4 h-4 mr-2" /> Download PDF Invoice
+            </a>
             <button
               type="button"
               onClick={handlePrint}

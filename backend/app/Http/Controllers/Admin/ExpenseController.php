@@ -107,4 +107,79 @@ class ExpenseController extends Controller
 
         return redirect()->back()->with('success', 'Expense deleted successfully.');
     }
+
+    public function exportCsv(Request $request)
+    {
+        $query = Expense::with('creator');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('reference_number', 'like', "%{$search}%")
+                  ->orWhere('note', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('category')) {
+            $query->where('category', $request->category);
+        }
+
+        if ($request->filled('payment_method')) {
+            $query->where('payment_method', $request->payment_method);
+        }
+
+        if ($request->filled('start_date')) {
+            $query->whereDate('expense_date', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $query->whereDate('expense_date', '<=', $request->end_date);
+        }
+
+        $expenses = $query->latest('expense_date')->get();
+
+        $filename = 'expenses_export_' . date('Y-m-d_H-i-s') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $callback = function () use ($expenses) {
+            $file = fopen('php://output', 'w');
+            fputs($file, "\xEF\xBB\xBF");
+
+            fputcsv($file, [
+                'Expense ID',
+                'Title / Particulars',
+                'Category',
+                'Amount (BDT)',
+                'Expense Date',
+                'Payment Method',
+                'Voucher / Ref No',
+                'Notes',
+                'Recorded By',
+                'Created At'
+            ]);
+
+            foreach ($expenses as $exp) {
+                fputcsv($file, [
+                    $exp->id,
+                    $exp->title,
+                    ucwords(str_replace('_', ' ', $exp->category)),
+                    number_format($exp->amount, 2, '.', ''),
+                    $exp->expense_date,
+                    ucwords($exp->payment_method),
+                    $exp->reference_number ?? 'N/A',
+                    $exp->note ?? '',
+                    $exp->creator->name ?? 'Admin',
+                    $exp->created_at ? $exp->created_at->format('Y-m-d H:i:s') : '',
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }
