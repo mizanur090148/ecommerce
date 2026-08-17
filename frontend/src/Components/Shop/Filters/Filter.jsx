@@ -326,7 +326,7 @@ const Filter = ({ filters = {}, onFilterChange }) => {
         </div>
 
         {/* Colors Section */}
-        <div className="filterColors">
+        {/* <div className="filterColors">
           <Accordion defaultExpanded disableGutters elevation={0}>
             <AccordionSummary
               expandIcon={<IoIosArrowDown size={20} />}
@@ -349,10 +349,10 @@ const Filter = ({ filters = {}, onFilterChange }) => {
               </div>
             </AccordionDetails>
           </Accordion>
-        </div>
+        </div> */}
 
         {/* Sizes Section */}
-        <div className="filterSizes">
+        {/* <div className="filterSizes">
           <Accordion defaultExpanded disableGutters elevation={0}>
             <AccordionSummary
               expandIcon={<IoIosArrowDown size={20} />}
@@ -376,7 +376,7 @@ const Filter = ({ filters = {}, onFilterChange }) => {
               </div>
             </AccordionDetails>
           </Accordion>
-        </div>
+        </div> */}
       </div>
     </div>
   );
