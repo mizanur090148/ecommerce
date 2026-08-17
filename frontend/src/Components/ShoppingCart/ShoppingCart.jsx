@@ -538,7 +538,7 @@ const ShoppingCart = () => {
                       <p>Pay with cash upon physical delivery of your order.</p>
                     </div>
                   </label>
-                  <label className={`paymentOptionLabel ${selectedPayment === "Direct Bank Transfer" ? "selected" : ""}`}>
+                  {/* <label className={`paymentOptionLabel ${selectedPayment === "Direct Bank Transfer" ? "selected" : ""}`}>
                     <input
                       type="radio"
                       name="payment"
@@ -550,7 +550,7 @@ const ShoppingCart = () => {
                       <span>Direct Bank Transfer</span>
                       <p>Transfer funds directly to our corporate bank account.</p>
                     </div>
-                  </label>
+                  </label> */}
                 </div>
 
                 {(orderError || sslError) && (

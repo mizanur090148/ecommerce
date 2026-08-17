@@ -1,17 +1,30 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./Popup.css";
 
 import popupImg from "../../Assets/newsletter-popup.jpg";
 
 const Popup = () => {
-  const [showPopup, setShowPopup] = useState(true);
+  const [showPopup, setShowPopup] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
+
+  useEffect(() => {
+    const isDismissed = sessionStorage.getItem("newsletter_popup_dismissed");
+    if (!isDismissed) {
+      setShowPopup(true);
+    }
+  }, []);
 
   const handleClose = () => {
     setFadeOut(true);
+    sessionStorage.setItem("newsletter_popup_dismissed", "true");
     setTimeout(() => {
       setShowPopup(false);
     }, 300);
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    handleClose();
   };
 
   return (
@@ -30,7 +43,7 @@ const Popup = () => {
               Be the first to get the latest news about trends, promotions, and
               much more!
             </p>
-            <form>
+            <form onSubmit={handleFormSubmit}>
               <input type="email" placeholder="Your email address" required />
               <button type="submit">JOIN</button>
             </form>
