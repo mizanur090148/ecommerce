@@ -60,6 +60,9 @@ export default function AdminLayout({ children, title }) {
       >
         <div className="flex items-center justify-between h-16 px-6 bg-slate-950 border-b border-slate-800">
           <Link href={route("admin.dashboard")} className="flex items-center space-x-3">
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white text-base shadow-sm">
+              G
+            </div>
             <span className="font-bold text-lg tracking-wider text-white">Admin Dashboard</span>
           </Link>
           <button className="lg:hidden text-slate-400 hover:text-white" onClick={() => setSidebarOpen(false)}>
