@@ -49,4 +49,5 @@ Route::prefix('v1')->group(function () {
     Route::post('/payment/sslcommerz/success', [PaymentApiController::class, 'successSSLCommerz']);
     Route::post('/payment/sslcommerz/fail', [PaymentApiController::class, 'failSSLCommerz']);
     Route::post('/payment/sslcommerz/cancel', [PaymentApiController::class, 'cancelSSLCommerz']);
+    Route::post('/payment/sslcommerz/ipn', [PaymentApiController::class, 'ipnSSLCommerz']);
 });

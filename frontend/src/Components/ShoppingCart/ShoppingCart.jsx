@@ -46,6 +46,14 @@ const ShoppingCart = () => {
         }).catch((err) => console.error(err));
       }
       window.scrollTo({ top: 0, behavior: "smooth" });
+    } else if (status === "failed") {
+      setActiveTab("cartTab2");
+      setSslError("⚠️ Online payment failed. Please try again or choose Cash on Delivery.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else if (status === "cancelled") {
+      setActiveTab("cartTab2");
+      setSslError("ℹ️ Payment process was cancelled. You can try again or select Cash on Delivery.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [location.search, dispatch]);
 
@@ -227,7 +235,7 @@ const ShoppingCart = () => {
                               </div>
                             </td>
                             <td data-label="Price">
-                              <p>৳{price.toFixed(2)}</p>
+                              <p>৳ {price.toFixed(2)}</p>
                             </td>
                             <td data-label="Quantity">
                               <div className="shoppingBagTableQuantity">
@@ -244,7 +252,7 @@ const ShoppingCart = () => {
                             </td>
                             <td data-label="Subtotal">
                               <p style={{ textAlign: "center", fontWeight: "500" }}>
-                                ৳{(price * qty).toFixed(2)}
+                                ৳ {(price * qty).toFixed(2)}
                               </p>
                             </td>
                             <td data-label="">
@@ -278,25 +286,25 @@ const ShoppingCart = () => {
                   <tbody>
                     <tr>
                       <th>Subtotal</th>
-                      <td>৳{numSubtotal.toFixed(2)}</td>
+                      <td>৳ {numSubtotal.toFixed(2)}</td>
                     </tr>
                     {numDiscount > 0 && (
                       <tr>
                         <th>Discount ({appliedCoupon?.code})</th>
-                        <td style={{ color: "#07bc0c", fontWeight: "bold" }}>-৳{numDiscount.toFixed(2)}</td>
+                        <td style={{ color: "#07bc0c", fontWeight: "bold" }}>-৳ {numDiscount.toFixed(2)}</td>
                       </tr>
                     )}
                     <tr>
                       <th>Shipping</th>
-                      <td>৳{numShipping.toFixed(2)}</td>
+                      <td>৳ {numShipping.toFixed(2)}</td>
                     </tr>
                     <tr>
                       <th>VAT</th>
-                      <td>৳{numVat.toFixed(2)}</td>
+                      <td>৳ {numVat.toFixed(2)}</td>
                     </tr>
                     <tr>
                       <th>Total</th>
-                      <td style={{ fontWeight: "bold", fontSize: "1.2rem", color: "#3046d9" }}>৳{numGrandTotal.toFixed(2)}</td>
+                      <td style={{ fontWeight: "bold", fontSize: "1.2rem", color: "#3046d9" }}>৳ {numGrandTotal.toFixed(2)}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -448,7 +456,7 @@ const ShoppingCart = () => {
                       <thead>
                         <tr>
                           <th>PRODUCTS</th>
-                          <th>SUBTOTAL</th>
+                          <th style={{ textAlign: "right" }}>SUBTOTAL</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -458,7 +466,7 @@ const ShoppingCart = () => {
                           return (
                             <tr key={item.productID}>
                               <td>{item.productName} × {q}</td>
-                              <td>৳{(p * q).toFixed(2)}</td>
+                              <td style={{ textAlign: "right" }}>৳ {(p * q).toFixed(2)}</td>
                             </tr>
                           );
                         })}
@@ -470,25 +478,25 @@ const ShoppingCart = () => {
                       <tbody>
                         <tr>
                           <th>Subtotal</th>
-                          <td>৳{numSubtotal.toFixed(2)}</td>
+                          <td style={{ textAlign: "right" }}>৳ {numSubtotal.toFixed(2)}</td>
                         </tr>
                         {numDiscount > 0 && (
                           <tr>
                             <th>Discount</th>
-                            <td style={{ color: "#07bc0c" }}>-৳{numDiscount.toFixed(2)}</td>
+                            <td style={{ color: "#07bc0c", textAlign: "right" }}>-৳ {numDiscount.toFixed(2)}</td>
                           </tr>
                         )}
                         <tr>
                           <th>Shipping</th>
-                          <td>৳{numShipping.toFixed(2)}</td>
+                          <td style={{ textAlign: "right" }}>৳ {numShipping.toFixed(2)}</td>
                         </tr>
                         <tr>
                           <th>VAT</th>
-                          <td>৳{numVat.toFixed(2)}</td>
+                          <td style={{ textAlign: "right" }}>৳ {numVat.toFixed(2)}</td>
                         </tr>
                         <tr>
                           <th>Total</th>
-                          <td style={{ fontWeight: "bold" }}>৳{numGrandTotal.toFixed(2)}</td>
+                          <td style={{ fontWeight: "bold", textAlign: "right" }}>৳ {numGrandTotal.toFixed(2)}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -496,7 +504,7 @@ const ShoppingCart = () => {
                 </div>
 
                 <div className="checkoutPaymentContainer">
-                  <label>
+                  <label className={`paymentOptionLabel ${selectedPayment === "SSLCommerz (bKash / Nagad / Cards)" ? "selected" : ""}`}>
                     <input
                       type="radio"
                       name="payment"
@@ -505,11 +513,19 @@ const ShoppingCart = () => {
                       onChange={handlePaymentChange}
                     />
                     <div className="checkoutPaymentMethod">
-                      <span>SSLCommerz (bKash, Nagad, Rocket, Cards)</span>
-                      <p>Pay securely via bKash, Nagad, Rocket, Visa/Mastercard, or Internet Banking.</p>
+                      <div className="paymentMethodHeader">
+                        <span>SSLCommerz Online Payment</span>
+                        <div className="paymentBadgesRow">
+                          <span className="pBadge bkash">bKash</span>
+                          <span className="pBadge nagad">Nagad</span>
+                          <span className="pBadge rocket">Rocket</span>
+                          <span className="pBadge card">Cards</span>
+                        </div>
+                      </div>
+                      <p>Pay securely via bKash, Nagad, Rocket, Upay, Visa, Mastercard, AMEX, or City Bank / DBBL Internet Banking.</p>
                     </div>
                   </label>
-                  <label>
+                  <label className={`paymentOptionLabel ${selectedPayment === "Cash on delivery" ? "selected" : ""}`}>
                     <input
                       type="radio"
                       name="payment"
@@ -519,10 +535,10 @@ const ShoppingCart = () => {
                     />
                     <div className="checkoutPaymentMethod">
                       <span>Cash on Delivery</span>
-                      <p>Pay with cash upon delivery of your items.</p>
+                      <p>Pay with cash upon physical delivery of your order.</p>
                     </div>
                   </label>
-                  <label>
+                  <label className={`paymentOptionLabel ${selectedPayment === "Direct Bank Transfer" ? "selected" : ""}`}>
                     <input
                       type="radio"
                       name="payment"
@@ -532,7 +548,7 @@ const ShoppingCart = () => {
                     />
                     <div className="checkoutPaymentMethod">
                       <span>Direct Bank Transfer</span>
-                      <p>Transfer directly to our store bank account.</p>
+                      <p>Transfer funds directly to our corporate bank account.</p>
                     </div>
                   </label>
                 </div>

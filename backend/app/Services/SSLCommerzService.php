@@ -36,6 +36,14 @@ class SSLCommerzService
     {
         $billing = is_array($order->billing_address) ? $order->billing_address : json_decode($order->billing_address, true);
 
+        $itemSummary = $order->items && count($order->items) > 0
+            ? $order->items->pluck('product_name')->take(3)->implode(', ')
+            : 'Order #' . $order->order_number;
+
+        if ($order->items && count($order->items) > 3) {
+            $itemSummary .= '...';
+        }
+
         $postData = [
             'store_id' => $this->storeId,
             'store_passwd' => $this->storePassword,
@@ -59,9 +67,9 @@ class SSLCommerzService
             // Shipment Information
             'shipping_method' => 'NO',
             'num_of_item' => count($order->items),
-            'product_name' => 'Ecommerce Order ' . $order->order_number,
-            'product_category' => 'General',
-            'product_profile' => 'general',
+            'product_name' => substr($itemSummary, 0, 255),
+            'product_category' => 'General Apparel',
+            'product_profile' => 'physical-goods',
         ];
 
         $endpoint = $this->baseUrl . '/gwprocess/v4/api.php';
@@ -104,9 +112,9 @@ class SSLCommerzService
     }
 
     /**
-     * Validate payment response hash from SSLCommerz.
+     * Validate payment response with SSLCommerz server validation API.
      */
-    public function validatePayment(array $postData): bool
+    public function validatePayment(array $postData, float $expectedAmount = 0.0): bool
     {
         $valId = $postData['val_id'] ?? null;
         if (!$valId) return false;
@@ -124,6 +132,18 @@ class SSLCommerzService
             $result = $response->json();
 
             if (isset($result['status']) && ($result['status'] === 'VALID' || $result['status'] === 'VALIDATED')) {
+                // Verify paid amount matches expected order total
+                if ($expectedAmount > 0) {
+                    $paidAmount = (float) ($result['amount'] ?? $result['currency_amount'] ?? 0);
+                    if (abs($paidAmount - $expectedAmount) > 1.0) {
+                        Log::warning('SSLCommerz Amount mismatch', [
+                            'paid' => $paidAmount,
+                            'expected' => $expectedAmount,
+                            'tran_id' => $postData['tran_id'] ?? null,
+                        ]);
+                        return false;
+                    }
+                }
                 return true;
             }
 

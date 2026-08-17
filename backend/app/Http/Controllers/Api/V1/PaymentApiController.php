@@ -75,12 +75,11 @@ class PaymentApiController extends Controller
     public function successSSLCommerz(Request $request): RedirectResponse
     {
         $tranId = $request->input('tran_id');
-        $valId = $request->input('val_id');
 
         $order = Order::where('order_number', $tranId)->first();
 
         if ($order) {
-            if ($this->sslCommerzService->validatePayment($request->all())) {
+            if ($this->sslCommerzService->validatePayment($request->all(), (float) $order->grand_total)) {
                 $cardType = $request->input('card_type') ?? $request->input('card_brand') ?? '';
                 $cardIssuer = $request->input('card_issuer') ?? '';
 
@@ -143,5 +142,34 @@ class PaymentApiController extends Controller
 
         $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
         return redirect()->to("{$frontendUrl}/cart?status=cancelled");
+    }
+
+    /**
+     * IPN Webhook (Instant Payment Notification) handler from SSLCommerz server.
+     */
+    public function ipnSSLCommerz(Request $request): JsonResponse
+    {
+        $tranId = $request->input('tran_id');
+        $status = $request->input('status');
+
+        $order = Order::where('order_number', $tranId)->first();
+
+        if (!$order) {
+            return response()->json(['status' => 'error', 'message' => 'Order not found'], 404);
+        }
+
+        if ($order->payment_status === 'paid') {
+            return response()->json(['status' => 'success', 'message' => 'Order already marked as paid']);
+        }
+
+        if (($status === 'VALID' || $status === 'VALIDATED') && $this->sslCommerzService->validatePayment($request->all(), (float) $order->grand_total)) {
+            $order->update([
+                'status' => 'processing',
+                'payment_status' => 'paid',
+            ]);
+            return response()->json(['status' => 'success', 'message' => 'IPN payment validated successfully']);
+        }
+
+        return response()->json(['status' => 'failed', 'message' => 'IPN validation failed'], 400);
     }
 }

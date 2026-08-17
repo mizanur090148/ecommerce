@@ -17,7 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        //
+        $middleware->validateCsrfTokens(except: [
+            'api/v1/payment/sslcommerz/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

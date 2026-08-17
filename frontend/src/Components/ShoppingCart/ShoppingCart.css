@@ -1143,3 +1143,89 @@
     padding: 0 5px;
   }
 }
+
+/* Smart Payment Badges & Option Labels */
+.paymentOptionLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 12px;
+  background-color: #ffffff;
+}
+
+.paymentOptionLabel:hover {
+  border-color: #b0c4de;
+}
+
+.paymentOptionLabel.selected {
+  border-color: #3046d9;
+  background-color: #f4f6ff;
+  box-shadow: 0 2px 8px rgba(48, 70, 217, 0.08);
+}
+
+.paymentMethodHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.paymentBadgesRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pBadge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pBadge.bkash {
+  background-color: #e2136e;
+  color: #ffffff;
+}
+
+.pBadge.nagad {
+  background-color: #f7941d;
+  color: #ffffff;
+}
+
+.pBadge.rocket {
+  background-color: #8c3494;
+  color: #ffffff;
+}
+
+.pBadge.card {
+  background-color: #1a1f71;
+  color: #ffffff;
+}
+
+/* Order Summary Table Alignment */
+.checkoutTotalContainer table {
+  width: 100% !important;
+  border-collapse: collapse;
+}
+
+.checkoutItems table th:last-child,
+.checkoutItems table td:last-child,
+.checkoutTotal table td:last-child {
+  text-align: right !important;
+}
+
+.checkoutItems table th:first-child,
+.checkoutItems table td:first-child,
+.checkoutTotal table th:first-child {
+  text-align: left !important;
+}
