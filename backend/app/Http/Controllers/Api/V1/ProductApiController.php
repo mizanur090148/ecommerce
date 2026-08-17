@@ -73,7 +73,7 @@ class ProductApiController extends Controller
             'categories',
             'images',
             'variants.attributeValues',
-            'reviews' => fn($q) => $q->latest(),
+            'reviews' => fn($q) => $q->where('is_approved', true)->latest(),
         ])
             ->where('slug', $slug)
             ->orWhere('id', $slug)
@@ -85,7 +85,7 @@ class ProductApiController extends Controller
                 'categories',
                 'images',
                 'variants.attributeValues',
-                'reviews' => fn($q) => $q->latest(),
+                'reviews' => fn($q) => $q->where('is_approved', true)->latest(),
             ])
                 ->where('slug', 'like', "%{$slug}%")
                 ->first() ?? Product::with([
@@ -93,7 +93,7 @@ class ProductApiController extends Controller
                     'categories',
                     'images',
                     'variants.attributeValues',
-                    'reviews' => fn($q) => $q->latest(),
+                    'reviews' => fn($q) => $q->where('is_approved', true)->latest(),
                 ])->first();
         }
 

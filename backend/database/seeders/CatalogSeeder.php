@@ -224,8 +224,8 @@ class CatalogSeeder extends Seeder
                 'is_active' => true,
                 'is_featured' => rand(0, 100) > 60,
                 'is_trendy' => rand(0, 100) > 50,
-                'rating_cache' => rand(40, 50) / 10,
-                'reviews_count' => rand(5, 140),
+                'rating_cache' => 0,
+                'reviews_count' => 0,
                 'meta_title' => "{$name} - Buy Online",
                 'meta_description' => "Shop {$name} at best prices. Fast shipping and official warranty.",
             ]);

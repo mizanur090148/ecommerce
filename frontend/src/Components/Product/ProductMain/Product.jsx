@@ -16,6 +16,8 @@ import { FiHeart } from "react-icons/fi";
 import { PiShareNetworkLight } from "react-icons/pi";
 import toast from "react-hot-toast";
 
+import ProductRating from "../../Common/ProductRating";
+
 import "./Product.css";
 
 const Product = () => {
@@ -232,13 +234,13 @@ const Product = () => {
               <h1>{product.name}</h1>
             </div>
 
-            <div className="productRating">
-              <FaStar color="#FEC78A" size={12} />
-              <FaStar color="#FEC78A" size={12} />
-              <FaStar color="#FEC78A" size={12} />
-              <FaStar color="#FEC78A" size={12} />
-              <FaStar color="#FEC78A" size={12} />
-              <p>({product.reviews_count || 0} reviews)</p>
+            <div className="productRating" style={{ display: "flex", alignItems: "center", gap: "6px", margin: "10px 0" }}>
+              <ProductRating
+                rating={product.rating_cache || 0}
+                reviewsCount={product.reviews_count || 0}
+                size={14}
+                showScore={true}
+              />
             </div>
 
             <div className="productPrice">

@@ -22,6 +22,7 @@ import {
   AlertCircle,
   Wallet,
   BarChart3,
+  Star,
 } from "lucide-react";
 
 export default function AdminLayout({ children, title }) {
@@ -36,6 +37,7 @@ export default function AdminLayout({ children, title }) {
     { name: "Brands", href: route("admin.brands.index"), icon: Tag },
     { name: "Orders", href: route("admin.orders.index"), icon: ShoppingBag },
     { name: "Customers", href: route("admin.customers.index"), icon: Users },
+    { name: "Reviews", href: route("admin.reviews.index"), icon: Star },
     { name: "Coupons", href: route("admin.coupons.index"), icon: Ticket },
     { name: "Expense Tracker", href: route("admin.expenses.index"), icon: Wallet },
     { name: "Financial Reports", href: route("admin.reports.index"), icon: BarChart3 },

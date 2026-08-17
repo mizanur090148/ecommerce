@@ -5,13 +5,13 @@ import { addToCart } from "../../../Features/Cart/cartSlice";
 import { Link } from "react-router-dom";
 import useProducts from "../../../Hooks/useProducts";
 import { FiHeart } from "react-icons/fi";
-import { FaStar, FaCartPlus } from "react-icons/fa";
+import { FaCartPlus, FaHeart } from "react-icons/fa";
 import toast from "react-hot-toast";
+import ProductRating from "../../Common/ProductRating";
 
 import { toggleWishList, selectWishListItems } from "../../../Features/Wishlist/wishListSlice";
 import wishlistService from "../../../Services/wishlistService";
 import authService from "../../../Services/authService";
-import { FaHeart } from "react-icons/fa";
 
 const Trendy = () => {
   const dispatch = useDispatch();
@@ -187,15 +187,13 @@ const Trendy = () => {
                               </span>
                             )}
                           </p>
-                          <div className="trendyProductRatingReviews">
-                            <div className="trendyProductRatingStar">
-                              <FaStar color="#FEC78A" size={10} />
-                              <FaStar color="#FEC78A" size={10} />
-                              <FaStar color="#FEC78A" size={10} />
-                              <FaStar color="#FEC78A" size={10} />
-                              <FaStar color="#FEC78A" size={10} />
-                            </div>
-                            <span>({product.reviews_count || 0})</span>
+                          <div className="trendyProductRatingReviews" style={{ margin: "4px 0" }}>
+                            <ProductRating
+                              rating={product.rating_cache || 0}
+                              reviewsCount={product.reviews_count || 0}
+                              size={10}
+                              hideIfZero={true}
+                            />
                           </div>
                         </div>
                       </div>

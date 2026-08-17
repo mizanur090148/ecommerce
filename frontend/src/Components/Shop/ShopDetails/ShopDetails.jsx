@@ -8,16 +8,14 @@ import Filter from "../Filters/Filter";
 import { Link, useSearchParams } from "react-router-dom";
 import useProducts from "../../../Hooks/useProducts";
 import { FiHeart } from "react-icons/fi";
-import { FaStar } from "react-icons/fa";
+import { FaHeart, FaCartPlus, FaAngleLeft, FaAngleRight } from "react-icons/fa";
+import ProductRating from "../../Common/ProductRating";
 import { IoFilterSharp, IoClose } from "react-icons/io5";
-import { FaAngleRight, FaAngleLeft } from "react-icons/fa6";
-import { FaCartPlus } from "react-icons/fa";
 import toast from "react-hot-toast";
 
 import { toggleWishList, selectWishListItems } from "../../../Features/Wishlist/wishListSlice";
 import wishlistService from "../../../Services/wishlistService";
 import authService from "../../../Services/authService";
-import { FaHeart } from "react-icons/fa";
 
 const ShopDetails = () => {
   const dispatch = useDispatch();
@@ -226,15 +224,13 @@ const ShopDetails = () => {
                                 </span>
                               )}
                             </p>
-                            <div className="sdProductRatingReviews">
-                              <div className="sdProductRatingStar">
-                                <FaStar color="#FEC78A" size={10} />
-                                <FaStar color="#FEC78A" size={10} />
-                                <FaStar color="#FEC78A" size={10} />
-                                <FaStar color="#FEC78A" size={10} />
-                                <FaStar color="#FEC78A" size={10} />
-                              </div>
-                              <span>({product.reviews_count || 0})</span>
+                            <div className="sdProductRatingReviews" style={{ margin: "4px 0" }}>
+                              <ProductRating
+                                rating={product.rating_cache || 0}
+                                reviewsCount={product.reviews_count || 0}
+                                size={10}
+                                hideIfZero={true}
+                              />
                             </div>
                           </div>
                         </div>

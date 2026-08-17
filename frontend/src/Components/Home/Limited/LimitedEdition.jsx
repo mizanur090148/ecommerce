@@ -13,7 +13,8 @@ import { Link } from "react-router-dom";
 import useProducts from "../../../Hooks/useProducts";
 
 import { FiHeart } from "react-icons/fi";
-import { FaStar, FaCartPlus } from "react-icons/fa";
+import { FaCartPlus } from "react-icons/fa";
+import ProductRating from "../../Common/ProductRating";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import toast from "react-hot-toast";
 
@@ -141,15 +142,13 @@ const LimitedEdition = () => {
                               </span>
                             )}
                           </p>
-                          <div className="productRatingReviews">
-                            <div className="productRatingStar">
-                              <FaStar color="#FEC78A" size={10} />
-                              <FaStar color="#FEC78A" size={10} />
-                              <FaStar color="#FEC78A" size={10} />
-                              <FaStar color="#FEC78A" size={10} />
-                              <FaStar color="#FEC78A" size={10} />
-                            </div>
-                            <span>({product.reviews_count || 0})</span>
+                          <div className="productRatingReviews" style={{ margin: "4px 0" }}>
+                            <ProductRating
+                              rating={product.rating_cache || 0}
+                              reviewsCount={product.reviews_count || 0}
+                              size={10}
+                              hideIfZero={true}
+                            />
                           </div>
                         </div>
                       </div>

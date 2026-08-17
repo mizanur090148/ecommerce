@@ -16,7 +16,8 @@ import { Link, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 
 import { FiHeart } from "react-icons/fi";
-import { FaHeart, FaStar } from "react-icons/fa";
+import { FaHeart } from "react-icons/fa";
+import ProductRating from "../../Common/ProductRating";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 
 const RelatedProducts = () => {
@@ -188,15 +189,13 @@ const RelatedProducts = () => {
                               </span>
                             )}
                           </p>
-                          <div className="productRatingReviews">
-                            <div className="productRatingStar">
-                              <FaStar color="#FEC78A" size={10} />
-                              <FaStar color="#FEC78A" size={10} />
-                              <FaStar color="#FEC78A" size={10} />
-                              <FaStar color="#FEC78A" size={10} />
-                              <FaStar color="#FEC78A" size={10} />
-                            </div>
-                            <span>({product.reviews_count || 0})</span>
+                          <div className="productRatingReviews" style={{ margin: "4px 0" }}>
+                            <ProductRating
+                              rating={product.rating_cache || 0}
+                              reviewsCount={product.reviews_count || 0}
+                              size={10}
+                              hideIfZero={true}
+                            />
                           </div>
                         </div>
                       </div>

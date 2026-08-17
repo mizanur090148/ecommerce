@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\ExpenseController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -48,6 +49,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     // CMS & Marketing
     Route::resource('banners', BannerController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('blogs', BlogController::class)->only(['index', 'store', 'destroy']);
+    Route::resource('reviews', ReviewController::class)->only(['index', 'destroy']);
+    Route::patch('reviews/{review}/toggle-approval', [ReviewController::class, 'toggleApproval'])->name('reviews.toggle-approval');
 
     // Accounts & Expenses
     Route::get('expenses/export-csv', [ExpenseController::class, 'exportCsv'])->name('expenses.export-csv');
