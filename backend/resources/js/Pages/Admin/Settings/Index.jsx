@@ -5,7 +5,7 @@ import { Save } from "lucide-react";
 
 export default function Index({ settings }) {
   const { data, setData, post, processing } = useForm({
-    store_name: settings.store_name || "Uomo Enterprise eCommerce",
+    store_name: settings.store_name || "Gentle Style eCommerce",
     store_email: settings.store_email || "support@ecommerce.com.bd",
     store_phone: settings.store_phone || "+880 1733-714009",
     store_address: settings.store_address || "Level 8, Tower 14, Gulshan-2, Dhaka 1212, Bangladesh",

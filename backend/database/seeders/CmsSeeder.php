@@ -61,7 +61,7 @@ class CmsSeeder extends Seeder
         ]);
 
         // Blogs
-        $author = User::where('email', 'admin@uomo.com')->first();
+        $author = User::where('email', 'admin@gentlestyle.com')->first();
         $blogTopics = [
             "Woman with good shoes is never be ugly place",
             "Heaven upon heaven moveth every have known",
@@ -84,8 +84,8 @@ class CmsSeeder extends Seeder
 
         // Settings
         $settingsData = [
-            'store_name' => 'Uomo Enterprise eCommerce',
-            'store_email' => 'sale@uomo.com',
+            'store_name' => 'Gentle Style eCommerce',
+            'store_email' => 'sale@gentlestyle.com',
             'store_phone' => '+1 246-345-0695',
             'store_address' => '1418 River Drive, Suite 35 Cottonhall, CA 9622 United States',
             'currency_code' => 'USD',
@@ -99,7 +99,7 @@ class CmsSeeder extends Seeder
         }
 
         // Sample Orders for Dashboard Testing
-        $customer = User::where('email', 'customer@uomo.com')->first();
+        $customer = User::where('email', 'customer@gentlestyle.com')->first();
         $product = Product::first();
 
         if ($customer && $product) {

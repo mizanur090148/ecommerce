@@ -37,7 +37,7 @@ const Footer = () => {
             <p>1418 River Drive, Suite 35 Cottonhall, CA 9622 United States</p>
 
             <div className="footer_address">
-              <strong> sale@uomo.com </strong>
+              <strong> sale@gentlestyle.com </strong>
               <strong> +1 246-345-0695 </strong>
             </div>
 
@@ -139,7 +139,7 @@ const Footer = () => {
         </div>
         <div className="footer_bottom">
           <p>
-            © {getCurrentYear()} Uomo. All Rights Reserved | Made By{" "}
+            © {getCurrentYear()} Gentle Style. All Rights Reserved | Made By{" "}
             <a
               href="https://github.com/shakti177"
               target="_blank"

@@ -12,7 +12,7 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         $admin = User::firstOrCreate(
-            ['email' => 'admin@uomo.com'],
+            ['email' => 'admin@gentlestyle.com'],
             [
                 'first_name' => 'Super',
                 'last_name' => 'Admin',
@@ -30,7 +30,7 @@ class UserSeeder extends Seeder
 
         // Demo customer user
         $customerUser = User::firstOrCreate(
-            ['email' => 'customer@uomo.com'],
+            ['email' => 'customer@gentlestyle.com'],
             [
                 'first_name' => 'Janice',
                 'last_name' => 'Miller',

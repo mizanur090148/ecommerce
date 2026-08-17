@@ -176,7 +176,7 @@ export default function Show({ order }) {
           <div className="flex flex-col sm:flex-row justify-between items-start border-b border-slate-200 dark:border-slate-700 pb-6 gap-6">
             <div>
               <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
-                UOMO ENTERPRISE
+                GENTLE STYLE
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 Official Commercial Sales Receipt & Tax Invoice
@@ -280,7 +280,7 @@ export default function Show({ order }) {
           {/* Totals & Signature Line */}
           <div className="flex flex-col sm:flex-row justify-between items-end border-t border-slate-200 dark:border-slate-700 pt-6 gap-6">
             <div className="text-xs text-slate-400 max-w-sm space-y-1">
-              <p>Thank you for shopping with UOMO Enterprise!</p>
+              <p>Thank you for shopping with Gentle Style!</p>
               <p>For support inquiries, contact <strong>support@ecommerce.com.bd</strong> or <strong>+880 1733-714009</strong>.</p>
             </div>
 
