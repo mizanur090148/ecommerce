@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, usePage } from "@inertiajs/react";
+import { Link, usePage, Head } from "@inertiajs/react";
 import {
   LayoutDashboard,
   Package,
@@ -51,6 +51,7 @@ export default function AdminLayout({ children, title }) {
 
   return (
     <div className={`min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex ${darkMode ? "dark" : ""}`}>
+      <Head title={title || "Admin Dashboard"} />
       {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-100 transform transition-transform duration-200 ease-in-out lg:translate-x-0 ${
@@ -59,10 +60,7 @@ export default function AdminLayout({ children, title }) {
       >
         <div className="flex items-center justify-between h-16 px-6 bg-slate-950 border-b border-slate-800">
           <Link href={route("admin.dashboard")} className="flex items-center space-x-3">
-            {/* <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white text-lg">
-              U
-            </div> */}
-            <span className="font-bold text-lg tracking-wider text-white">Admin Panel</span>
+            <span className="font-bold text-lg tracking-wider text-white">Admin Dashboard</span>
           </Link>
           <button className="lg:hidden text-slate-400 hover:text-white" onClick={() => setSidebarOpen(false)}>
             <X className="w-6 h-6" />

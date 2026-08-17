@@ -7,7 +7,7 @@ export default function Dashboard({ metrics }) {
   const { kpis, recent_orders, low_stock_products } = metrics;
 
   return (
-    <AdminLayout title="Dashboard Overview">
+    <AdminLayout title="Admin Dashboard">
       {/* Metric Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
