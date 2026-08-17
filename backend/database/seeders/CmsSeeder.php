@@ -87,7 +87,7 @@ class CmsSeeder extends Seeder
             'store_name' => 'Gentle Style eCommerce',
             'store_email' => 'sale@gentlestyle.com',
             'store_phone' => '+1 246-345-0695',
-            'store_address' => '1418 River Drive, Suite 35 Cottonhall, CA 9622 United States',
+            'store_address' => 'Level 8, Tower 14, Gulshan-2, Dhaka 1212 Bangladesh',
             'currency_code' => 'USD',
             'currency_symbol' => '$',
             'shipping_flat_rate' => '5.00',

@@ -34,7 +34,7 @@ const Footer = () => {
               <img src={logo} alt="" Z />
             </div>
 
-            <p>1418 River Drive, Suite 35 Cottonhall, CA 9622 United States</p>
+            <p>Level 8, Tower 14, Gulshan-2, Dhaka 1212 Bangladesh</p>
 
             <div className="footer_address">
               <strong> sale@gentlestyle.com </strong>
