@@ -7,6 +7,7 @@ import { Model } from "../../Model/Model";
 import { Link } from "react-router-dom";
 import productService from "../../../Services/productService";
 import { formatImageUrl } from "../../../Services/apiClient";
+import defaultHeroBg from "../../../Assets/Banner/banner_1.jpg";
 
 const HeroSection = () => {
   const [tshirtColor, setTshirtColor] = useState("red");
@@ -52,21 +53,22 @@ const HeroSection = () => {
     image: null,
   };
 
-  const slideBgImage = currentSlide.image ? formatImageUrl(currentSlide.image) : null;
+  const slideBgImage = currentSlide?.image
+    ? formatImageUrl(currentSlide.image)
+    : defaultHeroBg;
 
   return (
     <>
       <div
         className="heroMain"
-        style={
-          slideBgImage
-            ? {
-                backgroundImage: `linear-gradient(rgba(244, 229, 224, 0.85), rgba(244, 229, 224, 0.85)), url(${slideBgImage})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }
-            : {}
-        }
+        style={{
+          backgroundImage: slideBgImage
+            ? `linear-gradient(rgba(244, 229, 224, 0.35), rgba(244, 229, 224, 0.35)), url(${slideBgImage})`
+            : undefined,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
       >
         <div className="sectionleft">
           <p>{currentSlide.subtitle || "New Trend"}</p>
@@ -119,18 +121,22 @@ const HeroSection = () => {
             <button
               onClick={() => changeColor("#353933")}
               style={{ backgroundColor: "#353933" }}
+              aria-label="Color Dark Gray"
             ></button>
             <button
               onClick={() => changeColor("#EFBD4E")}
               style={{ backgroundColor: "#EFBD4E" }}
+              aria-label="Color Yellow"
             ></button>
             <button
               onClick={() => changeColor("#726DE7")}
               style={{ backgroundColor: "#726DE7" }}
+              aria-label="Color Purple"
             ></button>
             <button
               onClick={() => changeColor("red")}
               style={{ backgroundColor: "red" }}
+              aria-label="Color Red"
             ></button>
           </div>
         </div>
