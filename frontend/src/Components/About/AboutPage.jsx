@@ -27,50 +27,33 @@ const AboutPage = () => {
         <div className="aboutContent">
           <h3>Our Story</h3>
           <h4>
-            Duis aute irure dolor in reprehenderit in voluptate velit esse
-            cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
-            cupidatat non proident, sunt in culpa qui officia deserunt mollit
-            anim id est laborum.
+            Welcome to Gentle Style – Where Timeless Elegance Meets Contemporary Fashion. Founded with a passion for quality craftsmanship and modern sophistication, we craft apparel that empowers your individuality every single day.
           </h4>
           <p>
-            Saw wherein fruitful good days image them, midst, waters upon, saw.
-            Seas lights seasons. Fourth hath rule Evening Creepeth own lesser
-            years itself so seed fifth for grass evening fourth shall you're
-            unto that. Had. Female replenish for yielding so saw all one to
-            yielding grass you'll air sea it, open waters subdue, hath. Brought
-            second Made. Be. Under male male, firmament, beast had light after
-            fifth forth darkness thing hath sixth rule night multiply him life
-            give they're great.
+            At Gentle Style, we believe true style is about how your clothes make you feel. Every garment in our signature collection is thoughtfully designed and crafted from premium fabrics to deliver effortless comfort, durable quality, and an elevated aesthetic. From everyday essentials to statement wardrobe pieces, we bring you refined fashion tailored for the modern lifestyle.
           </p>
           <div className="content1">
             <div className="contentBox">
               <h5>Our Mission</h5>
               <p>
-                Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-                commodo consequat.
+                To empower fashion-conscious individuals with high-quality, ethically made apparel that seamlessly combines classic elegance with modern trends at accessible prices.
               </p>
             </div>
             <div className="contentBox">
               <h5>Our Vision</h5>
               <p>
-                Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-                commodo consequat.
+                To become a premier lifestyle destination celebrated for authentic style, sustainable craftsmanship, and an exceptional customer shopping experience.
               </p>
             </div>
           </div>
           <div className="content2">
             <div className="imgContent">
-              <img src={about2} alt="" />
+              <img src={about2} alt="Gentle Style Fashion" />
             </div>
             <div className="textContent">
               <h5>The Company</h5>
               <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Amet
-                sapien dignissim a elementum. Sociis metus, hendrerit mauris id
-                in. Quis sit sit ultrices tincidunt euismod luctus diam. Turpis
-                sodales orci etiam phasellus lacus id leo. Amet turpis nunc,
-                nulla massa est viverra interdum. Praesent auctor nulla morbi
-                non posuere mattis. Arcu eu id maecenas cras.
+                Headquartered in Bangladesh with a rapidly growing online presence, Gentle Style blends global design trends with seamless e-commerce convenience. Backed by dedicated customer support, secure payment solutions, and nationwide fast shipping, we are committed to delivering excellence at every step of your fashion journey.
               </p>
             </div>
           </div>
