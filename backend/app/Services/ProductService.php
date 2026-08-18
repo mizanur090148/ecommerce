@@ -170,21 +170,46 @@ class ProductService
     protected function syncVariants(Product $product, array $data): void
     {
         $colorSizes = $data['color_sizes'] ?? [];
+        $variantStocks = $data['variant_stocks'] ?? [];
 
         if (!empty($colorSizes)) {
             // Force delete previous variants to avoid soft-deleted duplicate SKU unique constraint in MySQL
             $product->variants()->forceDelete();
 
             foreach ($colorSizes as $colorId => $sizeIds) {
-                if (empty($sizeIds) || !is_array($sizeIds)) {
-                    continue;
-                }
-
                 $colorVal = AttributeValue::find($colorId);
                 if (!$colorVal) {
                     continue;
                 }
 
+                // Case A: Color-only variant (no specific size assigned)
+                if (empty($sizeIds) || !is_array($sizeIds)) {
+                    $varSku = $product->sku . '-' . strtoupper(Str::slug($colorVal->value));
+                    $stockKey = (string) $colorId;
+                    $varStock = isset($variantStocks[$stockKey]['stock_quantity'])
+                        ? (int) $variantStocks[$stockKey]['stock_quantity']
+                        : max(0, (int) $product->stock_quantity);
+                    $varPrice = isset($variantStocks[$stockKey]['price']) && $variantStocks[$stockKey]['price'] > 0
+                        ? (float) $variantStocks[$stockKey]['price']
+                        : $product->price;
+
+                    $variant = ProductVariant::withTrashed()->updateOrCreate(
+                        [
+                            'product_id' => $product->id,
+                            'sku' => $varSku,
+                        ],
+                        [
+                            'price' => $varPrice,
+                            'stock_quantity' => $varStock,
+                            'deleted_at' => null,
+                        ]
+                    );
+
+                    $variant->attributeValues()->sync([$colorId]);
+                    continue;
+                }
+
+                // Case B: Color + Size Matrix variants
                 foreach ($sizeIds as $sizeId) {
                     $sizeVal = AttributeValue::find($sizeId);
                     if (!$sizeVal) {
@@ -192,16 +217,22 @@ class ProductService
                     }
 
                     $varSku = $product->sku . '-' . strtoupper(Str::slug($sizeVal->value)) . '-' . strtoupper(Str::slug($colorVal->value));
+                    $stockKey = "{$colorId}_{$sizeId}";
+                    $varStock = isset($variantStocks[$stockKey]['stock_quantity'])
+                        ? (int) $variantStocks[$stockKey]['stock_quantity']
+                        : max(0, (int) $product->stock_quantity);
+                    $varPrice = isset($variantStocks[$stockKey]['price']) && $variantStocks[$stockKey]['price'] > 0
+                        ? (float) $variantStocks[$stockKey]['price']
+                        : $product->price;
 
-                    // Use updateOrCreate with product_id and sku to guarantee safety
                     $variant = ProductVariant::withTrashed()->updateOrCreate(
                         [
                             'product_id' => $product->id,
                             'sku' => $varSku,
                         ],
                         [
-                            'price' => $product->price,
-                            'stock_quantity' => $product->stock_quantity,
+                            'price' => $varPrice,
+                            'stock_quantity' => $varStock,
                             'deleted_at' => null,
                         ]
                     );
@@ -209,6 +240,13 @@ class ProductService
                     $variant->attributeValues()->sync([$colorId, $sizeId]);
                 }
             }
+
+            // Sync parent product total stock quantity with the sum of all variant stocks
+            $totalVariantStock = $product->variants()->sum('stock_quantity');
+            $product->update([
+                'stock_quantity' => $totalVariantStock,
+                'stock_status' => $totalVariantStock > 0 ? 'in_stock' : 'out_of_stock',
+            ]);
         }
     }
 

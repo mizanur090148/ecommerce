@@ -97,6 +97,18 @@ const Product = () => {
   const handleAddToCart = () => {
     if (!product) return;
 
+    const availableQty = activeVariant
+      ? (activeVariant.stock_quantity ?? 0)
+      : (product.stock_quantity ?? 0);
+
+    if (availableQty <= 0) {
+      toast.error("Selected option is currently out of stock.", {
+        duration: 2500,
+        style: { backgroundColor: "#ff4b4b", color: "white" },
+      });
+      return;
+    }
+
     const currentPrice = activeVariant?.price || product.sale_price || product.price;
 
     const productPayload = {
@@ -107,27 +119,33 @@ const Product = () => {
       backImg: product.images?.[1]?.url || activeImage || "",
       color: selectedColor,
       size: selectedSize,
+      variantID: activeVariant?.id || null,
       quantity: quantity,
     };
 
     const existingCartItem = cartItems.find(
-      (item) => item.productID === product.id && item.color === selectedColor && item.size === selectedSize
+      (item) =>
+        String(item.productID) === String(product.id) &&
+        (activeVariant
+          ? String(item.variantID) === String(activeVariant.id)
+          : item.color === selectedColor && item.size === selectedSize)
     );
 
-    const totalQty = (existingCartItem?.quantity || 0) + quantity;
+    const totalQty = Number(existingCartItem?.quantity || 0) + Number(quantity);
 
-    if (totalQty > 20) {
-      toast.error("Cart item limit reached (max 20 per item).", {
+    if (totalQty > availableQty) {
+      toast.error(`Cannot add more than available stock (${availableQty} units available).`, {
         duration: 2500,
         style: { backgroundColor: "#ff4b4b", color: "white" },
       });
-    } else {
-      dispatch(addToCart(productPayload));
-      toast.success(`Added ${quantity} x ${product.name} to cart!`, {
-        duration: 2500,
-        style: { backgroundColor: "#07bc0c", color: "white" },
-      });
+      return;
     }
+
+    dispatch(addToCart(productPayload));
+    toast.success(`Added ${quantity} x ${product.name} to cart!`, {
+      duration: 2500,
+      style: { backgroundColor: "#07bc0c", color: "white" },
+    });
   };
 
   const handleQuantityIncrement = () => {
@@ -405,8 +423,16 @@ const Product = () => {
                 <button type="button" onClick={handleQuantityIncrement}>+</button>
               </div>
               <div className="productCartBtn">
-                <button type="button" onClick={handleAddToCart}>
-                  Add to Cart
+                <button
+                  type="button"
+                  disabled={activeVariant ? (activeVariant.stock_quantity ?? 0) <= 0 : (product.stock_quantity ?? 0) <= 0}
+                  onClick={handleAddToCart}
+                  style={{
+                    opacity: (activeVariant ? (activeVariant.stock_quantity ?? 0) : (product.stock_quantity ?? 0)) <= 0 ? 0.5 : 1,
+                    cursor: (activeVariant ? (activeVariant.stock_quantity ?? 0) : (product.stock_quantity ?? 0)) <= 0 ? "not-allowed" : "pointer",
+                  }}
+                >
+                  {(activeVariant ? (activeVariant.stock_quantity ?? 0) : (product.stock_quantity ?? 0)) <= 0 ? "Out of Stock" : "Add to Cart"}
                 </button>
               </div>
             </div>
@@ -426,15 +452,22 @@ const Product = () => {
 
             <div className="productTags">
               <p>
-                SKU: <span>{product.sku || `PRD-${product.id}`}</span>
+                SKU: <span>{activeVariant?.sku || product.sku || `PRD-${product.id}`}</span>
               </p>
               <p>
                 Category: <span>{categoryName}</span>
               </p>
               <p>
                 Availability:{" "}
-                <span style={{ color: product.stock_quantity > 0 ? "#07bc0c" : "#e53e3e", fontWeight: "600" }}>
-                  {product.stock_quantity > 0 ? `In Stock (${product.stock_quantity} available)` : "Out of Stock"}
+                <span
+                  style={{
+                    color: (activeVariant ? (activeVariant.stock_quantity ?? 0) : (product.stock_quantity ?? 0)) > 0 ? "#07bc0c" : "#e53e3e",
+                    fontWeight: "600",
+                  }}
+                >
+                  {(activeVariant ? (activeVariant.stock_quantity ?? 0) : (product.stock_quantity ?? 0)) > 0
+                    ? `In Stock (${activeVariant ? activeVariant.stock_quantity : product.stock_quantity} available)`
+                    : "Out of Stock"}
                 </span>
               </p>
             </div>

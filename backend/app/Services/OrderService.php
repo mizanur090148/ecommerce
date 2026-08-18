@@ -45,35 +45,81 @@ class OrderService
             $itemsToCreate = [];
 
             foreach ($data['items'] as $itemData) {
-                // Pessimistic Database Row Lock to prevent race conditions during high concurrent traffic
+                // Pessimistic Database Row Lock to prevent race conditions
                 $product = Product::where('id', $itemData['product_id'])->lockForUpdate()->firstOrFail();
 
-                if ($product->is_stock_managed) {
+                $variant = null;
+                if (!empty($itemData['variant_id'])) {
+                    $variant = \App\Models\ProductVariant::where('id', $itemData['variant_id'])
+                        ->where('product_id', $product->id)
+                        ->lockForUpdate()
+                        ->first();
+                }
+
+                // If variant_id wasn't directly passed, try matching by color and/or size
+                if (!$variant && (!empty($itemData['color']) || !empty($itemData['size']))) {
+                    $color = $itemData['color'] ?? null;
+                    $size = $itemData['size'] ?? null;
+
+                    $variant = $product->variants()
+                        ->where(function ($vq) use ($color, $size) {
+                            if ($color) {
+                                $vq->whereHas('attributeValues', fn($avq) => $avq->where('value', $color));
+                            }
+                            if ($size) {
+                                $vq->whereHas('attributeValues', fn($avq) => $avq->where('value', $size));
+                            }
+                        })
+                        ->lockForUpdate()
+                        ->first();
+                }
+
+                // Determine stock limits & pricing
+                $qtyOrdered = (int) $itemData['quantity'];
+
+                if ($variant) {
+                    if ($variant->stock_quantity < $qtyOrdered) {
+                        throw new \InvalidArgumentException("Cannot order {$qtyOrdered} units of '{$product->name}'. Only {$variant->stock_quantity} available in selected option stock.");
+                    }
+                } elseif ($product->is_stock_managed) {
                     if ($product->stock_status === 'out_of_stock' || $product->stock_quantity < 1) {
                         throw new \InvalidArgumentException("Product '{$product->name}' is out of stock.");
                     }
-                    if ($itemData['quantity'] > $product->stock_quantity) {
-                        throw new \InvalidArgumentException("Cannot order {$itemData['quantity']} units of '{$product->name}'. Only {$product->stock_quantity} available in stock.");
+                    if ($qtyOrdered > $product->stock_quantity) {
+                        throw new \InvalidArgumentException("Cannot order {$qtyOrdered} units of '{$product->name}'. Only {$product->stock_quantity} available in stock.");
                     }
                 }
 
-                $unitPrice = $product->sale_price ?: $product->price;
-                $itemSubtotal = $unitPrice * $itemData['quantity'];
+                $unitPrice = $variant?->sale_price ?: ($variant?->price ?: ($product->sale_price ?: $product->price));
+                $itemSubtotal = $unitPrice * $qtyOrdered;
                 $subtotal += $itemSubtotal;
+
+                // Format item name with Color / Size details if present
+                $specParts = array_filter([$itemData['color'] ?? null, $itemData['size'] ?? null]);
+                $itemFormattedName = count($specParts) > 0
+                    ? $product->name . ' (' . implode(' / ', $specParts) . ')'
+                    : $product->name;
+
+                $itemSku = $variant?->sku ?: $product->sku;
 
                 $itemsToCreate[] = [
                     'product_id' => $product->id,
-                    'variant_id' => $itemData['variant_id'] ?? null,
-                    'product_name' => $product->name,
-                    'sku' => $product->sku,
+                    'variant_id' => $variant?->id ?: ($itemData['variant_id'] ?? null),
+                    'product_name' => $itemFormattedName,
+                    'sku' => $itemSku,
                     'unit_price' => $unitPrice,
-                    'quantity' => $itemData['quantity'],
+                    'quantity' => $qtyOrdered,
                     'subtotal' => $itemSubtotal,
                 ];
 
-                // Deduct stock quantity
+                // Deduct Variant Stock Quantity if present
+                if ($variant) {
+                    $variant->decrement('stock_quantity', $qtyOrdered);
+                }
+
+                // Deduct Parent Product Stock Quantity
                 if ($product->is_stock_managed) {
-                    $product->decrement('stock_quantity', $itemData['quantity']);
+                    $product->decrement('stock_quantity', $qtyOrdered);
                     if ($product->stock_quantity <= 0) {
                         $product->update(['stock_status' => 'out_of_stock']);
                     }

@@ -256,8 +256,15 @@ export default function Show({ order }) {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
                 {order.items?.map((item) => (
                   <tr key={item.id}>
-                    <td className="py-3.5 px-4 font-semibold text-slate-900 dark:text-white">
-                      {item.product_name}
+                    <td className="py-3.5 px-4">
+                      <div className="font-semibold text-slate-900 dark:text-white">
+                        {item.product_name}
+                      </div>
+                      {item.variant_id && (
+                        <span className="inline-block mt-0.5 text-[11px] font-mono px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-300 rounded border border-indigo-200 dark:border-indigo-800">
+                          Variant #{item.variant_id}
+                        </span>
+                      )}
                     </td>
                     <td className="py-3.5 px-4 font-mono text-xs text-slate-500">
                       {item.sku || `PRD-${item.product_id}`}

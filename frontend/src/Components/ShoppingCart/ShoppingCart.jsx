@@ -116,9 +116,9 @@ const ShoppingCart = () => {
     }
   };
 
-  const handleQuantityChange = (productId, quantity) => {
-    if (quantity >= 1 && quantity <= 20) {
-      dispatch(updateQuantity({ productID: productId, quantity: quantity }));
+  const handleQuantityChange = (productId, quantity, cartKey) => {
+    if (quantity >= 1) {
+      dispatch(updateQuantity({ productID: productId, cartKey: cartKey || productId, quantity: quantity }));
     }
   };
 
@@ -209,10 +209,10 @@ const ShoppingCart = () => {
                   <thead>
                     <tr>
                       <th>PRODUCT</th>
-                      <th>PRICE</th>
-                      <th>QUANTITY</th>
-                      <th>SUBTOTAL</th>
-                      <th></th>
+                      <th style={{ textAlign: "center" }}>PRICE</th>
+                      <th style={{ textAlign: "center" }}>QUANTITY</th>
+                      <th style={{ textAlign: "right" }}>SUBTOTAL</th>
+                      <th style={{ width: "40px", textAlign: "center" }}></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -220,8 +220,10 @@ const ShoppingCart = () => {
                       cartItems.map((item) => {
                         const price = Number(item.productPrice) || 0;
                         const qty = Number(item.quantity) || 1;
+                        const itemKey = item.cartKey || item.productID;
+
                         return (
-                          <tr key={item.productID}>
+                          <tr key={itemKey}>
                             <td data-label="Product">
                               <div className="shoppingBagTableProduct">
                                 <Link to={`/product/${item.productID}`} onClick={scrollToTop} className="shoppingBagTableImg">
@@ -231,34 +233,42 @@ const ShoppingCart = () => {
                                   <Link to={`/product/${item.productID}`} onClick={scrollToTop}>
                                     <h4>{item.productName}</h4>
                                   </Link>
+                                  {(item.color || item.size) && (
+                                    <p style={{ marginTop: "4px", fontSize: "12px", color: "#666" }}>
+                                      {item.color && <span>Color: <strong style={{ color: "#111" }}>{item.color}</strong></span>}
+                                      {item.color && item.size && <span> &nbsp;|&nbsp; </span>}
+                                      {item.size && <span>Size: <strong style={{ color: "#111" }}>{item.size}</strong></span>}
+                                    </p>
+                                  )}
                                 </div>
                               </div>
                             </td>
-                            <td data-label="Price">
+                            <td data-label="Price" style={{ textAlign: "center" }}>
                               <p>৳ {price.toFixed(2)}</p>
                             </td>
-                            <td data-label="Quantity">
+                            <td data-label="Quantity" style={{ textAlign: "center" }}>
                               <div className="shoppingBagTableQuantity">
-                                <button onClick={() => handleQuantityChange(item.productID, qty - 1)}>-</button>
+                                <button onClick={() => handleQuantityChange(item.productID, qty - 1, itemKey)}>-</button>
                                 <input
                                   type="text"
                                   min="1"
                                   max="20"
                                   value={qty}
-                                  onChange={(e) => handleQuantityChange(item.productID, parseInt(e.target.value) || 1)}
+                                  onChange={(e) => handleQuantityChange(item.productID, parseInt(e.target.value) || 1, itemKey)}
                                 />
-                                <button onClick={() => handleQuantityChange(item.productID, qty + 1)}>+</button>
+                                <button onClick={() => handleQuantityChange(item.productID, qty + 1, itemKey)}>+</button>
                               </div>
                             </td>
-                            <td data-label="Subtotal">
-                              <p style={{ textAlign: "center", fontWeight: "500" }}>
+                            <td data-label="Subtotal" style={{ textAlign: "right" }}>
+                              <p style={{ fontWeight: "600" }}>
                                 ৳ {(price * qty).toFixed(2)}
                               </p>
                             </td>
-                            <td data-label="">
+                            <td data-label="" style={{ textAlign: "center" }}>
                               <MdOutlineClose
-                                style={{ cursor: "pointer" }}
-                                onClick={() => dispatch(removeFromCart(item.productID))}
+                                style={{ cursor: "pointer", fontSize: "20px", color: "#666" }}
+                                onClick={() => dispatch(removeFromCart(itemKey))}
+                                title="Remove from cart"
                               />
                             </td>
                           </tr>
@@ -578,6 +588,9 @@ const ShoppingCart = () => {
                         order_notes: billingForm.notes || null,
                         items: cartItems.map((item) => ({
                           product_id: item.productID,
+                          variant_id: item.variantID || item.variant_id || null,
+                          color: item.color || null,
+                          size: item.size || null,
                           quantity: item.quantity,
                         })),
                       };

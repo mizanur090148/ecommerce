@@ -72,29 +72,32 @@ const cartSlice = createSlice({
       const product = action.payload;
       const price = Number(product.productPrice) || 0;
       const qty = Number(product.quantity) || 1;
+      const cartKey = product.cartKey || `${product.productID}_${product.variantID || `${product.color || ''}_${product.size || ''}`}`;
 
       const existingItem = state.items.find(
-        (item) => item.productID === product.productID
+        (item) => item.cartKey === cartKey || (
+          String(item.productID) === String(product.productID) &&
+          (product.variantID ? String(item.variantID) === String(product.variantID) : (item.color === product.color && item.size === product.size))
+        )
       );
+
       if (existingItem) {
-        if (existingItem.quantity < MAX_QUANTITY) {
-          existingItem.quantity += qty;
-          state.totalAmount += price * qty;
-        }
+        existingItem.quantity += qty;
+        state.totalAmount += price * qty;
       } else {
-        state.items.push({ ...product, productPrice: price, quantity: qty });
+        state.items.push({ ...product, cartKey, productPrice: price, quantity: qty });
         state.totalAmount += price * qty;
       }
       saveCartItems(state.items);
     },
     updateQuantity(state, action) {
-      const { productID, quantity } = action.payload;
+      const { productID, cartKey, quantity } = action.payload;
       const itemToUpdate = state.items.find(
-        (item) => item.productID === productID
+        (item) => (cartKey && item.cartKey === cartKey) || String(item.productID) === String(productID)
       );
       if (itemToUpdate) {
         const price = Number(itemToUpdate.productPrice) || 0;
-        const newQty = Math.min(Math.max(1, Number(quantity) || 1), MAX_QUANTITY);
+        const newQty = Math.max(1, Number(quantity) || 1);
         const difference = newQty - itemToUpdate.quantity;
 
         itemToUpdate.quantity = newQty;
@@ -103,15 +106,15 @@ const cartSlice = createSlice({
       saveCartItems(state.items);
     },
     removeFromCart(state, action) {
-      const productId = action.payload;
+      const target = action.payload;
       const itemToRemove = state.items.find(
-        (item) => item.productID === productId
+        (item) => (item.cartKey && item.cartKey === target) || String(item.productID) === String(target)
       );
       if (itemToRemove) {
         const price = Number(itemToRemove.productPrice) || 0;
         state.totalAmount -= price * itemToRemove.quantity;
         state.items = state.items.filter(
-          (item) => item.productID !== productId
+          (item) => (item.cartKey ? item.cartKey !== target : String(item.productID) !== String(target))
         );
       }
       saveCartItems(state.items);

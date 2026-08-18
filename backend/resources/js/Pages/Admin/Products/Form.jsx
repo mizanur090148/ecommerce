@@ -36,9 +36,30 @@ export default function Form({ product, categories = [], brands = [], tags = [],
         if (av.attribute_id === colorAttr.id) colorId = av.id;
         if (av.attribute_id === sizeAttr.id) sizeId = av.id;
       });
-      if (colorId && sizeId) {
+      if (colorId) {
         if (!map[colorId]) map[colorId] = [];
-        if (!map[colorId].includes(sizeId)) map[colorId].push(sizeId);
+        if (sizeId && !map[colorId].includes(sizeId)) map[colorId].push(sizeId);
+      }
+    });
+    return map;
+  };
+
+  const getExistingVariantStocks = () => {
+    if (!product?.variants) return {};
+    const map = {};
+    product.variants.forEach((v) => {
+      let colorId = null;
+      let sizeId = null;
+      v.attribute_values?.forEach((av) => {
+        if (av.attribute_id === colorAttr.id) colorId = av.id;
+        if (av.attribute_id === sizeAttr.id) sizeId = av.id;
+      });
+      if (colorId) {
+        const key = sizeId ? `${colorId}_${sizeId}` : `${colorId}`;
+        map[key] = {
+          stock_quantity: v.stock_quantity ?? 0,
+          price: v.price ?? product.price,
+        };
       }
     });
     return map;
@@ -52,6 +73,7 @@ export default function Form({ product, categories = [], brands = [], tags = [],
     category_ids: product?.categories?.map((c) => c.id) || [],
     tag_ids: product?.tags?.map((t) => t.id) || [],
     color_sizes: getExistingColorSizes(),
+    variant_stocks: getExistingVariantStocks(),
     price: product?.price || "",
     sale_price: product?.sale_price || "",
     cost_price: product?.cost_price || "",
@@ -1070,6 +1092,149 @@ export default function Form({ product, categories = [], brands = [], tags = [],
                 </div>
               )}
             </div>
+
+            {/* Step 3: Color & Size Wise Stock Quantity Input Table */}
+            {Object.keys(data.color_sizes).length > 0 && (
+              <div className="pt-6 border-t border-slate-100 dark:border-slate-700 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block text-sm font-bold text-slate-900 dark:text-white">
+                      Step 3: Color & Size Stock Quantity Matrix
+                    </label>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Specify exact stock quantity for each generated variant option. Total product stock will auto-calculate as the sum of these values.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 uppercase font-bold">
+                        <th className="py-3 px-4">Variant Specs</th>
+                        <th className="py-3 px-4">Generated SKU</th>
+                        <th className="py-3 px-4 text-center">Stock Quantity</th>
+                        <th className="py-3 px-4 text-center">Price (৳)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
+                      {Object.keys(data.color_sizes).flatMap((colorIdStr) => {
+                        const colorId = parseInt(colorIdStr);
+                        const colorObj = colorAttr.values?.find((c) => c.id === colorId);
+                        const selectedSizeIds = data.color_sizes[colorId] || [];
+
+                        // Color-only row if no size selected for this color
+                        if (selectedSizeIds.length === 0) {
+                          const key = `${colorId}`;
+                          const currentStock = data.variant_stocks?.[key]?.stock_quantity ?? data.stock_quantity ?? 0;
+                          const currentPrice = data.variant_stocks?.[key]?.price ?? data.price ?? 0;
+                          const genSku = `${data.sku || "SKU"}-${(colorObj?.value || "COL").toUpperCase()}`;
+
+                          return [
+                            <tr key={key} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30">
+                              <td className="py-3 px-4 font-bold flex items-center space-x-2">
+                                <span
+                                  className="w-3.5 h-3.5 rounded-full border border-black/20"
+                                  style={{ backgroundColor: colorObj?.color_code || "#ccc" }}
+                                />
+                                <span>{colorObj?.value || "Color"} (No Size)</span>
+                              </td>
+                              <td className="py-3 px-4 font-mono text-slate-500">{genSku}</td>
+                              <td className="py-3 px-4 text-center">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={currentStock}
+                                  onChange={(e) => {
+                                    const nextStocks = { ...data.variant_stocks };
+                                    nextStocks[key] = {
+                                      ...nextStocks[key],
+                                      stock_quantity: parseInt(e.target.value) || 0,
+                                    };
+                                    setData("variant_stocks", nextStocks);
+                                  }}
+                                  className="w-24 px-3 py-1.5 text-center font-bold bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg"
+                                />
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  value={currentPrice}
+                                  onChange={(e) => {
+                                    const nextStocks = { ...data.variant_stocks };
+                                    nextStocks[key] = {
+                                      ...nextStocks[key],
+                                      price: parseFloat(e.target.value) || 0,
+                                    };
+                                    setData("variant_stocks", nextStocks);
+                                  }}
+                                  className="w-28 px-3 py-1.5 text-center bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg"
+                                />
+                              </td>
+                            </tr>,
+                          ];
+                        }
+
+                        // Color + Size matrix rows
+                        return selectedSizeIds.map((sizeId) => {
+                          const sizeObj = sizeAttr.values?.find((s) => s.id === sizeId);
+                          const key = `${colorId}_${sizeId}`;
+                          const currentStock = data.variant_stocks?.[key]?.stock_quantity ?? 0;
+                          const currentPrice = data.variant_stocks?.[key]?.price ?? data.price ?? 0;
+                          const genSku = `${data.sku || "SKU"}-${(sizeObj?.value || "SIZE").toUpperCase()}-${(colorObj?.value || "COL").toUpperCase()}`;
+
+                          return (
+                            <tr key={key} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30">
+                              <td className="py-3 px-4 font-bold flex items-center space-x-2">
+                                <span
+                                  className="w-3.5 h-3.5 rounded-full border border-black/20"
+                                  style={{ backgroundColor: colorObj?.color_code || "#ccc" }}
+                                />
+                                <span>{colorObj?.value || "Color"} / <span className="text-indigo-600 dark:text-indigo-400 font-mono">{sizeObj?.value}</span></span>
+                              </td>
+                              <td className="py-3 px-4 font-mono text-slate-500">{genSku}</td>
+                              <td className="py-3 px-4 text-center">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={currentStock}
+                                  onChange={(e) => {
+                                    const nextStocks = { ...data.variant_stocks };
+                                    nextStocks[key] = {
+                                      ...nextStocks[key],
+                                      stock_quantity: parseInt(e.target.value) || 0,
+                                    };
+                                    setData("variant_stocks", nextStocks);
+                                  }}
+                                  className="w-24 px-3 py-1.5 text-center font-bold bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg"
+                                />
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  value={currentPrice}
+                                  onChange={(e) => {
+                                    const nextStocks = { ...data.variant_stocks };
+                                    nextStocks[key] = {
+                                      ...nextStocks[key],
+                                      price: parseFloat(e.target.value) || 0,
+                                    };
+                                    setData("variant_stocks", nextStocks);
+                                  }}
+                                  className="w-28 px-3 py-1.5 text-center bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg"
+                                />
+                              </td>
+                            </tr>
+                          );
+                        });
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
