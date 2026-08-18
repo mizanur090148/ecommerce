@@ -184,7 +184,7 @@ export default function Show({ order }) {
               <div className="text-xs text-slate-500 dark:text-slate-400 mt-2 space-y-0.5">
                 <p>📍 Head Office: Level 8, Tower 14, Gulshan-2, Dhaka 1212 (+880 1733-714009)</p>
                 <p>🏢 Branch: SS Road, Sirajganj 6700 (+880 1610-608835)</p>
-                <p>✉️ Email: support@ecommerce.com.bd</p>
+                <p>✉️ Email: sale@gentlestyle.com</p>
               </div>
             </div>
 
@@ -288,7 +288,7 @@ export default function Show({ order }) {
           <div className="flex flex-col sm:flex-row justify-between items-end border-t border-slate-200 dark:border-slate-700 pt-6 gap-6">
             <div className="text-xs text-slate-400 max-w-sm space-y-1">
               <p>Thank you for shopping with Gentle Style!</p>
-              <p>For support inquiries, contact <strong>support@ecommerce.com.bd</strong> or <strong>+880 1733-714009</strong>.</p>
+              <p>For support inquiries, contact <strong>sale@gentlestyle.com</strong> or <strong>+880 1733-714009</strong>.</p>
             </div>
 
             <div className="w-full sm:w-72 space-y-2 text-sm">

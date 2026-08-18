@@ -45,7 +45,7 @@ class ContactApiController extends Controller
 
         // 2. Send Email Notification to Admin & Customer
         try {
-            $adminEmail = config('mail.from.address', 'support@ecommerce.com.bd');
+            $adminEmail = config('mail.from.address', 'sale@gentlestyle.com');
             $adminName = config('mail.from.name', 'E-Commerce Store');
 
             // Admin Email Notification Body

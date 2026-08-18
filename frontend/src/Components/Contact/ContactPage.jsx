@@ -170,7 +170,7 @@ const ContactPage = () => {
                 <br /> Bangladesh
               </p>
               <p>
-                support@ecommerce.com.bd
+                sale@gentlestyle.com
                 <br />
                 +880 1733-714009
               </p>

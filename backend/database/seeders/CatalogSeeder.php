@@ -276,16 +276,20 @@ class CatalogSeeder extends Seeder
             if ($type === 'configurable') {
                 $sizesToUse = ['S', 'M', 'L', 'XL'];
                 $colorsToUse = ['Black', 'Red', 'Blue'];
+                $variantStockSum = 0;
 
-                foreach ($sizesToUse as $sizeKey) {
-                    foreach ($colorsToUse as $colorKey) {
+                foreach ($colorsToUse as $colorKey) {
+                    foreach ($sizesToUse as $sizeKey) {
                         $varSku = $sku . '-' . $sizeKey . '-' . strtoupper(substr($colorKey, 0, 3));
+                        $vStock = rand(5, 25);
+                        $variantStockSum += $vStock;
+
                         $variant = ProductVariant::create([
                             'product_id' => $product->id,
                             'sku' => $varSku,
                             'price' => $price,
                             'sale_price' => $salePrice,
-                            'stock_quantity' => rand(5, 30),
+                            'stock_quantity' => $vStock,
                         ]);
 
                         if (isset($sizeValModels[$sizeKey]) && isset($colorValModels[$colorKey])) {
@@ -296,6 +300,11 @@ class CatalogSeeder extends Seeder
                         }
                     }
                 }
+
+                $product->update([
+                    'stock_quantity' => $variantStockSum,
+                    'stock_status' => $variantStockSum > 0 ? 'in_stock' : 'out_of_stock',
+                ]);
             }
 
             $productCount++;
