@@ -138,6 +138,61 @@ const Product = () => {
     setQuantity((prev) => (prev > 1 ? prev - 1 : prev));
   };
 
+  // 1. Extract unique Colors available across product variants or colors array
+  const availableColors = React.useMemo(() => {
+    if (!product) return [];
+    if (product.variants && product.variants.length > 0) {
+      const colorSet = new Set();
+      product.variants.forEach((v) => {
+        if (v.attribute_values && v.attribute_values.length > 0) {
+          v.attribute_values.forEach((av) => {
+            const val = av.value;
+            const isColor = av.attribute?.code === 'color' || ['black','red','grey','gray','blue','yellow','white','green','pink'].includes(val.toLowerCase());
+            if (isColor) colorSet.add(val);
+          });
+        }
+      });
+      if (colorSet.size > 0) return Array.from(colorSet);
+    }
+    return product.colors || [];
+  }, [product]);
+
+  // Auto-select first color by default if none selected or invalid
+  useEffect(() => {
+    if (availableColors.length > 0 && (!selectedColor || !availableColors.map((c) => c.toLowerCase()).includes(selectedColor.toLowerCase()))) {
+      setSelectedColor(availableColors[0]);
+    }
+  }, [availableColors, selectedColor, setSelectedColor]);
+
+  // 2. Extract available sizes ONLY for the currently selectedColor
+  const availableSizesForColor = React.useMemo(() => {
+    if (!product) return [];
+    if (product.variants && product.variants.length > 0 && selectedColor) {
+      const sizeSet = new Set();
+      product.variants.forEach((v) => {
+        const hasSelectedColor = v.attribute_values?.some(
+          (av) => av.value.toLowerCase() === selectedColor.toLowerCase()
+        );
+        if (hasSelectedColor && v.attribute_values) {
+          v.attribute_values.forEach((av) => {
+            const val = av.value;
+            const isSize = av.attribute?.code === 'size' || ['xs','s','m','l','xl','xxl'].includes(val.toLowerCase());
+            if (isSize) sizeSet.add(val);
+          });
+        }
+      });
+      if (sizeSet.size > 0) return Array.from(sizeSet);
+    }
+    return product.sizes || [];
+  }, [product, selectedColor]);
+
+  // Auto-select first available size for current color if none selected or invalid
+  useEffect(() => {
+    if (availableSizesForColor.length > 0 && (!selectedSize || !availableSizesForColor.map((s) => s.toLowerCase()).includes(selectedSize.toLowerCase()))) {
+      setSelectedSize(availableSizesForColor[0]);
+    }
+  }, [availableSizesForColor, selectedSize, setSelectedSize]);
+
   if (loading) {
     return (
       <div style={{ textAlign: "center", padding: "80px 20px" }}>
@@ -259,75 +314,85 @@ const Product = () => {
             </div>
 
             <div className="productSizeColor">
-              {/* Dynamic Variant Selector */}
-              {product.variants && product.variants.length > 0 && (
-                <div className="productVariants" style={{ marginBottom: "15px" }}>
-                  <p style={{ fontWeight: "600", fontSize: "14px", marginBottom: "8px" }}>Select Option / Model:</p>
-                  <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                    {product.variants.map((v) => (
-                      <button
-                        key={v.id}
-                        onClick={() => {
-                          if (v.attributes?.color) setSelectedColor(v.attributes.color);
-                          if (v.attributes?.size) setSelectedSize(v.attributes.size);
-                        }}
-                        style={{
-                          padding: "8px 14px",
-                          border: activeVariant?.id === v.id ? "2px solid #000" : "1px solid #ccc",
-                          background: activeVariant?.id === v.id ? "#000" : "#fff",
-                          color: activeVariant?.id === v.id ? "#fff" : "#000",
-                          borderRadius: "4px",
-                          fontWeight: "500",
-                          fontSize: "13px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        {v.name || Object.values(v.attributes || {}).join(" / ")} (৳{v.price})
-                      </button>
-                    ))}
+              {/* Color Selector Buttons */}
+              {availableColors.length > 0 && (
+                <div className="productColor" style={{ marginBottom: "20px" }}>
+                  <p style={{ fontWeight: "600", fontSize: "14px", marginBottom: "10px" }}>
+                    Color: <strong style={{ color: "#3046d9", textTransform: "capitalize" }}>{selectedColor}</strong>
+                  </p>
+                  <div className="colorBtn" style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                    {availableColors.map((c) => {
+                      const isSelected = selectedColor?.toLowerCase() === c.toLowerCase();
+                      return (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => setSelectedColor(c)}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            padding: "8px 16px",
+                            borderRadius: "8px",
+                            border: isSelected ? "2px solid #3046d9" : "1px solid #ddd",
+                            backgroundColor: isSelected ? "#edf2ff" : "#ffffff",
+                            color: isSelected ? "#3046d9" : "#333333",
+                            fontWeight: isSelected ? "700" : "500",
+                            fontSize: "13px",
+                            cursor: "pointer",
+                            transition: "all 0.2s ease",
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: "14px",
+                              height: "14px",
+                              borderRadius: "50%",
+                              backgroundColor: c.toLowerCase(),
+                              border: "1px solid rgba(0,0,0,0.2)",
+                              display: "inline-block",
+                            }}
+                          />
+                          {c}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
-              {/* Sizes */}
-              {product.sizes && product.sizes.length > 0 && (
-                <div className="productSize">
-                  <p>Size: <strong>{selectedSize}</strong></p>
-                  <div className="sizeBtn">
-                    {product.sizes.map((s) => (
-                      <button
-                        key={s}
-                        className={selectedSize === s ? "active" : ""}
-                        onClick={() => setSelectedSize(s)}
-                        style={{
-                          background: selectedSize === s ? "#000" : "#fff",
-                          color: selectedSize === s ? "#fff" : "#000",
-                        }}
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Colors */}
-              {product.colors && product.colors.length > 0 && (
-                <div className="productColor">
-                  <p>Color: <strong>{selectedColor}</strong></p>
-                  <div className="colorBtn">
-                    {product.colors.map((c) => (
-                      <button
-                        key={c}
-                        onClick={() => setSelectedColor(c)}
-                        style={{
-                          backgroundColor: c.toLowerCase(),
-                          border: selectedColor === c ? "2px solid #000" : "1px solid #ddd",
-                        }}
-                        className={selectedColor === c ? "highlighted" : ""}
-                        title={c}
-                      />
-                    ))}
+              {/* Dynamic Size Buttons (Filtered by Currently Selected Color) */}
+              {availableSizesForColor.length > 0 && (
+                <div className="productSize" style={{ marginBottom: "20px" }}>
+                  <p style={{ fontWeight: "600", fontSize: "14px", marginBottom: "10px" }}>
+                    Size: <strong style={{ color: "#3046d9" }}>{selectedSize}</strong>
+                  </p>
+                  <div className="sizeBtn" style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                    {availableSizesForColor.map((s) => {
+                      const isSelected = selectedSize?.toLowerCase() === s.toLowerCase();
+                      return (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => setSelectedSize(s)}
+                          style={{
+                            padding: "8px 16px",
+                            borderRadius: "8px",
+                            border: isSelected ? "2px solid #000" : "1px solid #ddd",
+                            backgroundColor: isSelected ? "#000000" : "#ffffff",
+                            color: isSelected ? "#ffffff" : "#333333",
+                            fontWeight: isSelected ? "700" : "500",
+                            fontSize: "13px",
+                            cursor: "pointer",
+                            minWidth: "44px",
+                            textAlign: "center",
+                            transition: "all 0.2s ease",
+                          }}
+                        >
+                          {s}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
