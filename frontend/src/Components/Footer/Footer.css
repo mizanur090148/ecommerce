@@ -22,10 +22,21 @@
 
 .footer_logo_container {
   margin-bottom: 20px;
+  max-width: 180px;
+}
+
+.footer_logo_container a {
+  display: inline-flex;
+  align-items: center;
 }
 
 .footer_logo_container img {
   background: none !important;
+  height: auto;
+  max-height: 40px;
+  max-width: 160px;
+  width: auto;
+  object-fit: contain;
 }
 
 .footer_left p {
